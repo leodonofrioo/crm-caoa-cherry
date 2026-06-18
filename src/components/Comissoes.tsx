@@ -8,10 +8,12 @@ import {
   TrendingUp,
   Filter,
 } from 'lucide-react';
+import { MobileEntityCard, MobileFilterSheet, MobilePageHeader } from './mobile';
 
 export default function Comissoes() {
   const { sales, settings, markCommissionReceived, showConfirm } = useCRM();
   const [statusFilter, setStatusFilter] = useState<string>('Todos');
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // Calculates metrics
   const totalVolume = sales
@@ -44,8 +46,39 @@ export default function Comissoes() {
   });
 
   return (
-    <div className="space-y-6 animate-fade-in relative">
-      <div>
+    <div className="space-y-4 md:space-y-6 animate-fade-in relative">
+      <MobilePageHeader
+        title="Comissões"
+        description="Previsto, recebido e baixa por venda."
+        meta={
+          <button
+            type="button"
+            onClick={() => setShowMobileFilters(true)}
+            className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-[10px] font-black uppercase text-[#002C5F]"
+          >
+            <Filter className="h-3.5 w-3.5" />
+            {statusFilter === 'Todos' ? 'Todos' : statusFilter}
+          </button>
+        }
+      />
+
+      <MobileFilterSheet title="Filtrar comissões" open={showMobileFilters} onClose={() => setShowMobileFilters(false)}>
+        <label className="space-y-2 text-xs font-black uppercase tracking-wide text-slate-500">
+          <span>Situação</span>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm font-bold normal-case tracking-normal text-slate-700"
+          >
+            <option value="Todos">Todos Comissionamentos</option>
+            <option value="A receber">A Receber</option>
+            <option value="Recebido">Recebidos</option>
+            <option value="Cancelado">Cancelados</option>
+          </select>
+        </label>
+      </MobileFilterSheet>
+
+      <div className="hidden md:block">
         <h1 className="text-3xl font-display font-medium tracking-tight text-slate-800">
           Minhas Comissões
         </h1>
@@ -55,7 +88,7 @@ export default function Comissoes() {
       </div>
 
       {/* Commissions stats summary boxes */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3 md:gap-4">
         {/* Total volume */}
         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-1">
           <div className="text-slate-500 text-xs font-bold uppercase tracking-wider flex items-center justify-between">
@@ -123,7 +156,7 @@ export default function Comissoes() {
 
       {/* Filter and commissions list layout */}
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden text-slate-800">
-        <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-slate-50/50">
+        <div className="hidden md:flex p-4 border-b border-slate-100 flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-slate-50/50">
           <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
             <Filter className="w-4 h-4 text-slate-400" />
             Vendas e Comissionamento correspondente
@@ -144,7 +177,65 @@ export default function Comissoes() {
         </div>
 
         {filteredSales.length > 0 ? (
-          <div className="overflow-x-auto">
+          <>
+          <div className="md:hidden space-y-3 p-3">
+            {filteredSales.map((sale) => {
+              let statusColor = '';
+              if (sale.commissionStatus === 'Recebido') statusColor = 'bg-green-100 text-green-800';
+              else if (sale.commissionStatus === 'A receber') statusColor = 'bg-amber-100 text-amber-800';
+              else statusColor = 'bg-slate-100 text-slate-400';
+              const bonus = (sale.productBonusAmount ?? 0) + (sale.goalBonusAmount ?? 0) + (sale.goalExtraAmount ?? 0);
+
+              return (
+                <MobileEntityCard key={sale.id} tone={sale.commissionStatus === 'A receber' ? 'amber' : 'default'}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-black text-slate-900">{sale.clientName}</div>
+                      <div className="mt-1 text-[11px] font-bold text-[#002C5F]">{sale.carModel} · {sale.carVersion}</div>
+                    </div>
+                    <span className={`shrink-0 rounded-full px-2.5 py-1 text-[9px] font-black uppercase ${statusColor}`}>
+                      {sale.commissionStatus}
+                    </span>
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                    <div className="rounded-xl border border-slate-200 bg-white/75 p-2">
+                      <div className="text-[9px] font-black uppercase text-slate-400">Venda</div>
+                      <div className="font-mono font-black text-slate-800">
+                        {sale.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                      </div>
+                    </div>
+                    <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 p-2">
+                      <div className="text-[9px] font-black uppercase text-emerald-700">Comissão</div>
+                      <div className="font-mono font-black text-emerald-800">
+                        {sale.commissionAmount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-2 text-[10px] font-bold text-slate-500">
+                    Fixa {sale.commissionPercent}% · Bônus {bonus.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} · {new Date(sale.createdAt).toLocaleDateString('pt-BR')}
+                  </div>
+                  {sale.commissionStatus === 'A receber' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        showConfirm(
+                          'Baixar Comissão',
+                          `Thayná, confirma que recebeu a comissão de R$ ${sale.commissionAmount.toFixed(2)} referente à venda do cliente ${sale.clientName}?`,
+                          () => {
+                            markCommissionReceived(sale.id);
+                          }
+                        );
+                      }}
+                      className="mt-3 w-full rounded-xl bg-emerald-600 px-4 py-2.5 text-[10px] font-black uppercase text-white"
+                    >
+                      Baixar pagamento
+                    </button>
+                  )}
+                </MobileEntityCard>
+              );
+            })}
+          </div>
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="bg-slate-50 text-slate-400 font-semibold uppercase tracking-wider border-b border-slate-100">
@@ -240,6 +331,7 @@ export default function Comissoes() {
               </tbody>
             </table>
           </div>
+          </>
         ) : (
           <div className="p-12 text-center text-slate-400">
             Nenhuma comissão correspondente ao filtro encontrado.

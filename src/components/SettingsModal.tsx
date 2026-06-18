@@ -662,7 +662,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 flex items-start sm:items-center justify-center p-3 sm:p-4 z-50 animate-fade-in no-print overflow-y-auto">
+    <div className="fixed inset-0 bg-slate-900/60 flex items-start sm:items-center justify-center p-3 sm:p-4 z-[70] animate-fade-in no-print overflow-y-auto">
       <div className="bg-white rounded-xl max-w-4xl w-full p-4 sm:p-6 shadow-xl border border-slate-200 flex flex-col space-y-6 my-3 sm:my-8 font-sans max-h-[calc(100vh-1.5rem)] sm:max-h-[92vh]">
         {/* Header bar */}
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">

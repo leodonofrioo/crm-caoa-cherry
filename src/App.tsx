@@ -30,6 +30,7 @@ import {
   LogOut,
 } from 'lucide-react';
 import { SalesStatus } from './types';
+import { MobileBottomNav } from './components/mobile';
 
 interface AuthUser {
   login: string;
@@ -241,10 +242,45 @@ function NavigationLayout({ user, onLogout }: { user: AuthUser; onLogout: () => 
     setActiveTab('venda');
   };
 
+  const handleCreateSaleFromDashboard = () => {
+    setSelectedSaleId(null);
+    setCreateSaleRequest({ id: Date.now(), status: 'Novo cliente' });
+    setActiveTab('venda');
+  };
+
+  const handleMobileNavSelect = (tabId: string) => {
+    if (tabId === 'settings') {
+      setShowSettingsModal(true);
+      return;
+    }
+    if (tabId === 'logout') {
+      onLogout();
+      return;
+    }
+    setActiveTab(tabId);
+    if (tabId !== 'venda') setSelectedSaleId(null);
+  };
+
+  const [showMobileMore, setShowMobileMore] = useState(false);
+
+  const mobileNavItems = [
+    { id: 'dashboard', label: 'Painel', icon: LayoutDashboard },
+    { id: 'kanban', label: 'Pipeline', icon: Columns4 },
+    { id: 'venda', label: 'Vendas', icon: ListOrdered },
+    { id: 'installations', label: 'Agenda', icon: CalendarDays },
+  ];
+
+  const mobileMoreItems = [
+    { id: 'accessories', label: 'Catálogo', icon: ShoppingBag },
+    { id: 'comissoes', label: 'Comissões', icon: DollarSign },
+    { id: 'settings', label: 'Configurações', icon: Settings },
+    { id: 'logout', label: 'Sair', icon: LogOut, danger: true },
+  ];
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       {/* Top Header bar */}
-      <header className="no-print bg-white border-b border-slate-200 shadow-xs shrink-0">
+      <header className="no-print sticky top-0 z-30 bg-white border-b border-slate-200 shadow-xs shrink-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3 min-w-0">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#002C5F] text-xs font-black text-white">
@@ -292,10 +328,10 @@ function NavigationLayout({ user, onLogout }: { user: AuthUser; onLogout: () => 
       </header>
 
       {/* Main content body (Layout Sidebar + Main Grid Content) */}
-      <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col md:flex-row gap-8">
+      <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 pb-28 md:py-8 md:pb-8 flex flex-col md:flex-row gap-5 md:gap-8">
         
         {/* Navigation panel */}
-        <aside className="no-print w-full md:w-64 shrink-0">
+        <aside className="no-print hidden md:block w-full md:w-64 shrink-0">
           <nav className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm space-y-1.5 md:sticky md:top-6">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 block mb-3">
               Rotas do Sistema
@@ -330,6 +366,7 @@ function NavigationLayout({ user, onLogout }: { user: AuthUser; onLogout: () => 
             <Dashboard
               onNavigateToTab={(tab) => setActiveTab(tab)}
               onSelectSale={(id) => handleDeepNavigate('venda', id)}
+              onCreateSale={handleCreateSaleFromDashboard}
             />
           )}
           {activeTab === 'kanban' && (
@@ -356,8 +393,17 @@ function NavigationLayout({ user, onLogout }: { user: AuthUser; onLogout: () => 
 
       <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
 
+      <MobileBottomNav
+        items={mobileNavItems}
+        moreItems={mobileMoreItems}
+        activeId={activeTab}
+        moreOpen={showMobileMore}
+        onSelect={handleMobileNavSelect}
+        onToggleMore={() => setShowMobileMore((current) => !current)}
+      />
+
       {/* Footer bar */}
-      <footer className="no-print mt-auto py-6 border-t border-slate-100 text-slate-400 text-[11px] font-sans text-center">
+      <footer className="no-print hidden md:block mt-auto py-6 border-t border-slate-100 text-slate-400 text-[11px] font-sans text-center">
         <span>CRM Thayná Reis · Catálogo de Acessórios · Uso Interno · 2026</span>
       </footer>
     </div>

@@ -13,17 +13,20 @@ import {
   ExternalLink,
   ChevronRight,
   ShieldAlert,
+  Plus,
 } from 'lucide-react';
 import { Followup, Sale } from '../types';
 import { getMonthlyOpportunityCount, getMonthlyTargetAmount, getSaleMonthKey } from '../utils/commissions';
 import { buildInstallationEntries, diffDays } from '../utils/installationSchedule';
+import { MobileEntityCard, MobilePageHeader } from './mobile';
 
 interface DashboardProps {
   onNavigateToTab: (tab: string) => void;
   onSelectSale: (saleId: string) => void;
+  onCreateSale: () => void;
 }
 
-export default function Dashboard({ onNavigateToTab, onSelectSale }: DashboardProps) {
+export default function Dashboard({ onNavigateToTab, onSelectSale, onCreateSale }: DashboardProps) {
   const {
     sales,
     saleItems,
@@ -153,9 +156,61 @@ export default function Dashboard({ onNavigateToTab, onSelectSale }: DashboardPr
   };
 
   return (
-    <div className="space-y-8 animate-fade-in" id="dashboard-tab">
+    <div className="space-y-5 md:space-y-8 animate-fade-in" id="dashboard-tab">
       {/* Upper header action bar */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 pb-5">
+      <MobilePageHeader
+        title="Painel Geral"
+        description="Ações do dia, instalações críticas e meta em um lugar."
+        actionLabel="Nova proposta"
+        actionIcon={<Plus className="h-4 w-4" />}
+        onAction={onCreateSale}
+        meta={
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1.5 text-[11px] font-black text-[#002C5F]">
+            <Clock className="h-3.5 w-3.5" />
+            Hoje: 17 de Junho, 2026
+          </div>
+        }
+      />
+
+      <div className="md:hidden grid grid-cols-1 gap-3">
+        <MobileEntityCard tone={overdueFollowups.length > 0 ? 'red' : 'default'}>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="text-[10px] font-black uppercase tracking-widest text-slate-500">Follow-ups agora</div>
+              <div className="mt-1 text-2xl font-black text-[#002C5F]">{overdueFollowups.length + todayFollowups.length}</div>
+            </div>
+            <button
+              type="button"
+              onClick={() => onNavigateToTab('venda')}
+              className="rounded-xl border border-blue-100 bg-white px-3 py-2 text-[10px] font-black uppercase text-[#002C5F]"
+            >
+              Ver vendas
+            </button>
+          </div>
+          <div className="mt-2 text-xs font-semibold text-slate-500">
+            {overdueFollowups.length} atrasado(s), {todayFollowups.length} para hoje.
+          </div>
+        </MobileEntityCard>
+
+        <div className="grid grid-cols-2 gap-3">
+          <MobileEntityCard tone={installationRadarCounts.overdue > 0 ? 'red' : 'blue'} onClick={() => onNavigateToTab('installations')}>
+            <div className="text-[10px] font-black uppercase tracking-widest text-slate-500">Instalações</div>
+            <div className="mt-1 flex items-end justify-between">
+              <strong className="font-mono text-2xl font-black text-[#002C5F]">{installationRadarCounts.today}</strong>
+              <span className="text-[10px] font-bold text-red-600">{installationRadarCounts.overdue} atraso</span>
+            </div>
+          </MobileEntityCard>
+          <MobileEntityCard tone={goalReached ? 'green' : 'amber'}>
+            <div className="text-[10px] font-black uppercase tracking-widest text-slate-500">Meta</div>
+            <div className="mt-1 font-mono text-xl font-black text-[#002C5F]">{monthlyGoalPercent.toFixed(0)}%</div>
+            <div className="mt-1 text-[10px] font-bold text-slate-500">
+              {goalRemaining.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} falta
+            </div>
+          </MobileEntityCard>
+        </div>
+      </div>
+
+      <div className="hidden md:flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 pb-5">
         <div>
           <h1 className="text-3xl font-display font-medium tracking-tight text-slate-800">
             Painel Geral
@@ -173,7 +228,7 @@ export default function Dashboard({ onNavigateToTab, onSelectSale }: DashboardPr
       </div>
 
       {/* Target Sales Progress Card */}
-      <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+      <div className="hidden md:block bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
           <div>
             <span className="text-[10px] bg-[#002C5F]/10 text-[#002C5F] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
@@ -609,7 +664,7 @@ export default function Dashboard({ onNavigateToTab, onSelectSale }: DashboardPr
 
       {/* Followup Action Modal */}
       {followupAction && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-start sm:items-center justify-center z-50 animate-fade-in p-3 sm:p-4 overflow-y-auto">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-start sm:items-center justify-center z-[70] animate-fade-in p-3 sm:p-4 overflow-y-auto">
           <div className="bg-white rounded-2xl max-w-md w-full max-h-[calc(100vh-1.5rem)] shadow-xl border border-slate-100 overflow-y-auto transform scale-100 transition-all my-3 sm:my-0">
             <div className={`p-5 text-white ${followupAction.type === 'Feito' ? 'bg-[#002C5F]' : 'bg-amber-600'}`}>
               <h3 className="text-lg font-display font-medium flex items-center gap-2">

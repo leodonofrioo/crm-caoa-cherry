@@ -24,7 +24,9 @@ import {
   MessageSquare,
   DollarSign,
   Trash2,
+  Plus,
 } from 'lucide-react';
+import { MobileEntityCard, MobilePageHeader } from './mobile';
 
 const STATUS_COLUMNS: { name: SalesStatus; borderHex: string; headerBg: string; stripeColor: string; title: string; textHex: string }[] = [
   { 
@@ -98,6 +100,7 @@ export default function Kanban({ onSelectSale, onCreateSale }: KanbanProps) {
   const [showLostDialog, setShowLostDialog] = useState(false);
   const [lossTargetId, setLossTargetId] = useState<string | null>(null);
   const [lostReasonText, setLostReasonText] = useState('');
+  const [activeMobileStatus, setActiveMobileStatus] = useState<SalesStatus>('Novo cliente');
 
   const getAutomationForSale = (sale: Sale) => {
     const items = saleItems.filter((item) => item.saleId === sale.id);
@@ -169,9 +172,150 @@ export default function Kanban({ onSelectSale, onCreateSale }: KanbanProps) {
     setLostReasonText('');
   };
 
+  const mobileSales = sales
+    .filter((sale) => sale.status === activeMobileStatus)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  const activeMobileColumn = STATUS_COLUMNS.find((column) => column.name === activeMobileStatus) || STATUS_COLUMNS[0];
+
   return (
     <div className="space-y-6 animate-fade-in relative font-sans text-slate-800">
-      <div>
+      <div className="md:hidden space-y-4">
+        <MobilePageHeader
+          title="Pipeline"
+          description="Status, agenda e pagamento por oportunidade."
+          actionLabel={`Nova em ${activeMobileColumn.title}`}
+          actionIcon={<Plus className="h-4 w-4" />}
+          onAction={() => onCreateSale(activeMobileStatus)}
+          meta={
+            <div className="inline-flex w-fit items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-[10px] font-black uppercase tracking-wide text-[#002C5F]">
+              <Activity className="h-3.5 w-3.5" />
+              {pendingAutoMoveCount > 0 ? `${pendingAutoMoveCount} fora da regra` : 'Sincronizado'}
+            </div>
+          }
+        />
+
+        <div className="flex snap-x gap-2 overflow-x-auto pb-1">
+          {STATUS_COLUMNS.map((column) => {
+            const active = activeMobileStatus === column.name;
+            const count = sales.filter((sale) => sale.status === column.name).length;
+            return (
+              <button
+                key={column.name}
+                type="button"
+                onClick={() => setActiveMobileStatus(column.name)}
+                className={`snap-start whitespace-nowrap rounded-full border px-3 py-2 text-[10px] font-black uppercase ${
+                  active
+                    ? 'border-[#002C5F] bg-[#002C5F] text-white'
+                    : 'border-slate-200 bg-white text-slate-500'
+                }`}
+              >
+                {column.title} <span className="font-mono">{count}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="space-y-3">
+          {mobileSales.length > 0 ? mobileSales.map((sale) => {
+            const items = saleItems.filter((item) => item.saleId === sale.id);
+            const pendingFollowup = followups.find((followup) => followup.saleId === sale.id && followup.status === 'Pendente');
+            const radar = getInstallationRadar(sale, getSimulatedToday());
+            const effectiveInstallationStatus = getEffectiveInstallationStatus(sale, getSimulatedToday());
+            const paymentSignal = getPaymentSignal(sale, radar, getSimulatedToday());
+            const automation = getAutomationForSale(sale);
+            const needsAutoMove = !automation.locked && automation.status !== sale.status;
+
+            return (
+              <MobileEntityCard key={sale.id} tone={paymentSignal.critical || radar.level === 'red' ? 'red' : 'default'}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-black text-slate-900">{sale.clientName}</div>
+                    <div className="mt-1 truncate text-[11px] font-bold text-[#002C5F]">
+                      {sale.carModel} {sale.carVersion ? `· ${sale.carVersion}` : ''}
+                    </div>
+                  </div>
+                  <div className="text-right font-mono text-sm font-black text-[#002C5F]">
+                    {sale.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </div>
+                </div>
+
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  <span className={`rounded-full border px-2 py-1 text-[9px] font-black uppercase ${radar.badgeClass}`}>
+                    {formatDateBR(sale.installationDate)} · {effectiveInstallationStatus}
+                  </span>
+                  <span className={`rounded-full border px-2 py-1 text-[9px] font-black uppercase ${paymentSignal.badgeClass}`}>
+                    {paymentSignal.label}
+                  </span>
+                  <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[9px] font-black uppercase text-slate-500">
+                    {items.length} item(ns)
+                  </span>
+                </div>
+
+                {pendingFollowup && (
+                  <div className="mt-3 rounded-lg border border-amber-100 bg-amber-50 px-2.5 py-2 text-[10px] font-bold text-amber-800">
+                    Contato: {pendingFollowup.dueDate} · {pendingFollowup.type}
+                  </div>
+                )}
+
+                {needsAutoMove && (
+                  <button
+                    type="button"
+                    onClick={() => updateSaleStatus(sale.id, automation.status)}
+                    className="mt-3 w-full rounded-xl border border-blue-100 bg-blue-50 px-3 py-2 text-[10px] font-black uppercase text-[#002C5F]"
+                  >
+                    Aplicar auto: {automation.status}
+                  </button>
+                )}
+
+                <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => shiftStatus(sale, false)}
+                      disabled={sale.status === 'Novo cliente'}
+                      className="rounded-lg border border-slate-200 bg-white p-2 text-slate-500 disabled:opacity-30"
+                      title="Mover para etapa anterior"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => shiftStatus(sale, true)}
+                      disabled={sale.status === 'Perdido'}
+                      className="rounded-lg border border-slate-200 bg-white p-2 text-slate-500 disabled:opacity-30"
+                      title="Mover para próxima etapa"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onSelectSale(sale.id)}
+                    className="rounded-xl bg-[#002C5F] px-4 py-2 text-[10px] font-black uppercase text-white"
+                  >
+                    Abrir proposta
+                  </button>
+                </div>
+              </MobileEntityCard>
+            );
+          }) : (
+            <MobileEntityCard className="text-center">
+              <HelpCircle className="mx-auto h-7 w-7 text-slate-300" />
+              <div className="mt-2 text-xs font-black uppercase tracking-wide text-slate-500">Sem clientes nesta etapa</div>
+              <button
+                type="button"
+                onClick={() => onCreateSale(activeMobileStatus)}
+                className="mt-3 w-full rounded-xl bg-[#002C5F] px-4 py-3 text-xs font-black uppercase text-white"
+              >
+                Adicionar proposta
+              </button>
+            </MobileEntityCard>
+          )}
+        </div>
+      </div>
+
+      <div className="hidden md:block">
         <h1 className="text-3xl font-display font-bold tracking-tight text-[#002C5F] uppercase">
           Funil de Vendas (Kanban)
         </h1>
@@ -187,7 +331,7 @@ export default function Kanban({ onSelectSale, onCreateSale }: KanbanProps) {
       </div>
 
       {/* Kanban columns grid */}
-      <div className="flex gap-4 overflow-x-auto pb-6 select-none scrollbar-thin snap-x max-w-full">
+      <div className="hidden md:flex gap-4 overflow-x-auto pb-6 select-none scrollbar-thin snap-x max-w-full">
         {STATUS_COLUMNS.map((col) => {
           const columnSales = sales
             .filter((s) => s.status === col.name)
@@ -454,7 +598,7 @@ export default function Kanban({ onSelectSale, onCreateSale }: KanbanProps) {
 
       {/* Lost Reason Dialog Modal */}
       {showLostDialog && (
-        <div className="fixed inset-0 bg-slate-900/60 flex items-start sm:items-center justify-center p-3 sm:p-4 z-50 animate-fade-in no-print bg-opacity-70 overflow-y-auto">
+        <div className="fixed inset-0 bg-slate-900/60 flex items-start sm:items-center justify-center p-3 sm:p-4 z-[70] animate-fade-in no-print bg-opacity-70 overflow-y-auto">
           <div className="bg-white rounded-2xl max-w-sm w-full max-h-[calc(100vh-1.5rem)] overflow-y-auto p-4 sm:p-6 shadow-xl border border-slate-200 space-y-4 my-3 sm:my-0">
             <div className="text-center space-y-2">
               <span className="p-3 bg-red-50 text-rose-600 rounded-xl inline-block border border-rose-150 shadow-xs">

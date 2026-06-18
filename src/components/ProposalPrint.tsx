@@ -42,7 +42,7 @@ export default function ProposalPrint({ sale, items, accessories, onClose }: Pro
   });
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 flex items-start sm:items-center justify-center p-3 sm:p-4 z-50 animate-fade-in no-print overflow-y-auto">
+    <div className="fixed inset-0 bg-slate-900/60 flex items-start sm:items-center justify-center p-3 sm:p-4 z-[70] animate-fade-in no-print overflow-y-auto">
       <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[calc(100vh-1.5rem)] sm:max-h-[90vh] overflow-hidden shadow-xl border border-slate-100 flex flex-col my-3 sm:my-0">
         {/* Modal Toolbar (no-print) */}
         <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50 no-print hover:grayscale-0">

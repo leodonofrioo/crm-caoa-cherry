@@ -14,6 +14,7 @@ import {
 } from '../types';
 import {
   Search,
+  Filter,
   Plus,
   Trash2,
   Calendar,
@@ -46,6 +47,7 @@ import {
 } from 'lucide-react';
 import ProposalPrint from './ProposalPrint';
 import FilmSimulatorModal from './FilmSimulatorModal';
+import { MobileActionBar, MobileEntityCard, MobileFilterSheet, MobilePageHeader } from './mobile';
 import { getAccessoryAttributeBadges } from '../data/categoryConfig';
 import { isVehicleCompatible } from '../data/accessories';
 import { calculateSaleCommission, getMonthlyOpportunityCount, getMonthlyVolumeBeforeSale, getSaleMonthKey } from '../utils/commissions';
@@ -342,6 +344,8 @@ export default function VendaForm({ selectedSaleId, onClearSelectedSale, createR
   // Selected view or form control
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('Todos');
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [mobileFormStep, setMobileFormStep] = useState<'client' | 'accessories' | 'review'>('client');
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingSale, setEditingSale] = useState<Sale | null>(null);
@@ -666,6 +670,7 @@ export default function VendaForm({ selectedSaleId, onClearSelectedSale, createR
     setIsFilmConfigModalOpen(false);
     setSaleStatus(nextStatus);
     setCustomCommissionPercent(settings.commissionPercent);
+    setMobileFormStep('client');
     setIsFormOpen(true);
   };
 
@@ -710,6 +715,7 @@ export default function VendaForm({ selectedSaleId, onClearSelectedSale, createR
     setFilmConfiguration(sale.filmConfiguration || {});
     setIsPackageSlotModalOpen(false);
     setIsFilmConfigModalOpen(false);
+    setMobileFormStep('client');
 
     setIsFormOpen(true);
   };
@@ -1074,6 +1080,13 @@ export default function VendaForm({ selectedSaleId, onClearSelectedSale, createR
     return saleItems.filter((item) => item.saleId === saleId);
   };
 
+  const goMobileFormStep = (step: 'client' | 'accessories' | 'review') => {
+    setMobileFormStep(step);
+    requestAnimationFrame(() => {
+      document.getElementById(`sale-step-${step}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    });
+  };
+
   // Cascade references for form selection
   const currentModelObj = carModels.find((m) => m.name === carModel);
   const activeVersionsList = currentModelObj?.versions || [];
@@ -1081,8 +1094,16 @@ export default function VendaForm({ selectedSaleId, onClearSelectedSale, createR
   const activeYearsList = currentVersionObj?.years || [];
 
   return (
-    <div className="space-y-6 animate-fade-in relative text-slate-800">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 pb-5">
+    <div className="space-y-4 md:space-y-6 animate-fade-in relative text-slate-800">
+      <MobilePageHeader
+        title="Minhas Vendas"
+        description="Criar proposta, acompanhar agenda e fechar acessórios."
+        actionLabel="Nova proposta"
+        actionIcon={<Plus className="h-4 w-4" />}
+        onAction={() => handleOpenCreate()}
+      />
+
+      <div className="hidden md:flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 pb-5">
         <div>
           <h1 className="text-3xl font-display font-medium tracking-tight text-slate-800">
             Minhas Vendas
@@ -1100,7 +1121,48 @@ export default function VendaForm({ selectedSaleId, onClearSelectedSale, createR
       </div>
 
       {/* Tables filter controls */}
-      <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col md:flex-row gap-4 items-center">
+      <div className="md:hidden space-y-2 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+        <div className="relative">
+          <Search className="w-4.5 h-4.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            placeholder="Cliente, telefone ou modelo..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 text-sm font-semibold text-slate-700 focus:outline-none"
+          />
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowMobileFilters(true)}
+          className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-blue-100 bg-blue-50 text-xs font-black uppercase tracking-wide text-[#002C5F]"
+        >
+          <Filter className="h-4 w-4" />
+          Etapa: {statusFilter === 'Todos' ? 'Todas' : statusFilter}
+        </button>
+      </div>
+
+      <MobileFilterSheet title="Filtros de vendas" open={showMobileFilters} onClose={() => setShowMobileFilters(false)}>
+        <label className="space-y-2 text-xs font-black uppercase tracking-wide text-slate-500">
+          <span>Etapa comercial</span>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm font-bold normal-case tracking-normal text-slate-700"
+          >
+            <option value="Todos">Todas as Etapas</option>
+            <option value="Novo cliente">Novo Cliente</option>
+            <option value="Orçamento enviado">Orçamento Enviado</option>
+            <option value="Aprovado">Aprovado</option>
+            <option value="Aguardando instalação">Aguardando Instalação</option>
+            <option value="Pronto para entrega">Pronto para Entrega</option>
+            <option value="Entregue">Entregues</option>
+            <option value="Perdido">Perdidos</option>
+          </select>
+        </label>
+      </MobileFilterSheet>
+
+      <div className="hidden md:flex bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex-col md:flex-row gap-4 items-center">
         {/* Search */}
         <div className="w-full md:flex-1 relative">
           <Search className="w-4.5 h-4.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -1133,8 +1195,98 @@ export default function VendaForm({ selectedSaleId, onClearSelectedSale, createR
         </div>
       </div>
 
+      <div className="md:hidden space-y-3">
+        {filteredSales.length > 0 ? filteredSales.map((sale) => {
+          const itemsCount = getSaleFilteredItems(sale.id).length;
+          const radar = getInstallationRadar(sale, getSimulatedToday());
+          const effectiveInstallationStatus = getEffectiveInstallationStatus(sale, getSimulatedToday());
+          const paymentSignal = getPaymentSignal(sale, radar, getSimulatedToday());
+          const tone = sale.status === 'Perdido'
+            ? 'red'
+            : paymentSignal.critical || radar.level === 'red'
+              ? 'amber'
+              : 'default';
+
+          return (
+            <MobileEntityCard key={sale.id} tone={tone}>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-black text-slate-900">{sale.clientName}</div>
+                  <div className="mt-1 text-[11px] font-bold text-[#002C5F]">
+                    {sale.carModel} {sale.carVersion ? `· ${sale.carVersion}` : ''} {sale.carYear ? `· ${sale.carYear}` : ''}
+                  </div>
+                  <div className="mt-1 font-mono text-[11px] font-semibold text-slate-400">{sale.clientPhone}</div>
+                </div>
+                <div className="text-right">
+                  <div className="font-mono text-sm font-black text-[#002C5F]">
+                    {sale.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </div>
+                  <div className="mt-1 text-[10px] font-black uppercase text-slate-400">{itemsCount} item(ns)</div>
+                </div>
+              </div>
+
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[9px] font-black uppercase text-slate-600">
+                  {sale.status}
+                </span>
+                <span className={`rounded-full border px-2 py-1 text-[9px] font-black uppercase ${radar.badgeClass}`}>
+                  {formatDateBR(sale.installationDate)} · {effectiveInstallationStatus}
+                </span>
+                <span className={`rounded-full border px-2 py-1 text-[9px] font-black uppercase ${paymentSignal.badgeClass}`}>
+                  {paymentSignal.label}
+                </span>
+              </div>
+
+              <div className="mt-3 grid grid-cols-[1fr_auto_auto] gap-2 border-t border-slate-100 pt-3">
+                <button
+                  type="button"
+                  onClick={() => handleOpenEdit(sale)}
+                  className="rounded-xl bg-[#002C5F] px-3 py-2.5 text-[10px] font-black uppercase text-white"
+                >
+                  Ver e editar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPrintingSale(sale)}
+                  className="rounded-xl border border-slate-200 bg-white p-2.5 text-[#002C5F]"
+                  title="Imprimir proposta"
+                >
+                  <Printer className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    showConfirm(
+                      'Excluir Oportunidade',
+                      `Tem certeza que deseja apagar permanentemente a proposta/venda de ${sale.clientName}? Todos os itens, follow-ups e histórico correspondentes serão excluídos do sistema.`,
+                      () => deleteSale(sale.id)
+                    );
+                  }}
+                  className="rounded-xl border border-red-100 bg-red-50 p-2.5 text-red-600"
+                  title="Excluir proposta"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            </MobileEntityCard>
+          );
+        }) : (
+          <MobileEntityCard className="text-center">
+            <FileText className="mx-auto h-8 w-8 text-slate-300" />
+            <div className="mt-2 text-xs font-black uppercase tracking-wide text-slate-500">Nenhuma proposta cadastrada</div>
+            <button
+              type="button"
+              onClick={() => handleOpenCreate()}
+              className="mt-3 w-full rounded-xl bg-[#002C5F] px-4 py-3 text-xs font-black uppercase text-white"
+            >
+              Criar primeira proposta
+            </button>
+          </MobileEntityCard>
+        )}
+      </div>
+
       {/* Main Grid: list of sales */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+      <div className="hidden md:block bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
         {filteredSales.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm border-collapse">
@@ -1254,29 +1406,49 @@ export default function VendaForm({ selectedSaleId, onClearSelectedSale, createR
 
       {/* Sale Creator Modal Overlay */}
       {isFormOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 flex items-start justify-center p-1.5 sm:p-2 z-40 animate-fade-in no-print overflow-y-auto">
-          <div className="bg-white rounded-2xl w-full max-w-[min(1500px,calc(100vw-12px))] max-h-[calc(100vh-0.75rem)] p-3 sm:p-5 shadow-xl border border-slate-100 space-y-4 my-1.5 overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-xl font-display font-bold text-slate-800">
+        <div className="fixed inset-0 bg-slate-900/60 flex items-start justify-center p-0 md:p-2 z-[70] animate-fade-in no-print overflow-y-auto">
+          <div className="bg-white rounded-none md:rounded-2xl w-full max-w-[min(1500px,calc(100vw-12px))] h-[100dvh] max-h-[100dvh] md:h-auto md:max-h-[calc(100vh-0.75rem)] p-3 pb-0 md:p-5 shadow-xl border border-slate-100 space-y-4 md:my-1.5 overflow-y-auto">
+            <div className="sticky top-0 z-20 -mx-3 -mt-3 bg-white px-3 pt-3 md:static md:m-0 md:p-0">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 className="text-base md:text-xl font-display font-bold text-slate-800">
                 {editingSale ? `Proposta Comercial de Acessórios • ${clientName}` : 'Nova Oportunidade / Proposta'}
-              </h3>
-              <button
-                onClick={() => setIsFormOpen(false)}
-                className="bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold px-2.5 py-1 rounded"
-              >
-                X
-              </button>
+                </h3>
+                <button
+                  onClick={() => setIsFormOpen(false)}
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold px-2.5 py-1 rounded"
+                >
+                  X
+                </button>
+              </div>
+              <div className="md:hidden grid grid-cols-3 gap-1.5 border-b border-slate-100 py-2">
+                {[
+                  ['client', 'Cliente'],
+                  ['accessories', 'Acessórios'],
+                  ['review', 'Revisão'],
+                ].map(([step, label]) => (
+                  <button
+                    key={step}
+                    type="button"
+                    onClick={() => goMobileFormStep(step as 'client' | 'accessories' | 'review')}
+                    className={`rounded-xl px-2 py-2 text-[10px] font-black uppercase ${
+                      mobileFormStep === step ? 'bg-[#002C5F] text-white' : 'bg-slate-50 text-slate-500'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <form onSubmit={handleSaveSale} className="space-y-6 text-xs text-slate-700">
+            <form onSubmit={handleSaveSale} className="space-y-6 pb-3 md:pb-0 text-xs text-slate-700">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* 1. Client data section */}
-                <div className="space-y-4">
+                <div id="sale-step-client" className="space-y-4 scroll-mt-24">
                   <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest border-l-2 border-blue-900 pl-2">
                     Informações do Cliente e Concessionária
                   </h4>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <label className="text-xs font-semibold text-slate-700">Nome do Cliente *</label>
                       <input
@@ -1391,7 +1563,7 @@ export default function VendaForm({ selectedSaleId, onClearSelectedSale, createR
                     )}
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {/* 1. Model selection */}
                     <div className="space-y-1">
                       <label className="text-xs font-semibold text-slate-700">Modelo Carro *</label>
@@ -1645,7 +1817,7 @@ export default function VendaForm({ selectedSaleId, onClearSelectedSale, createR
                   {editingSale && (
                     <div className="border border-indigo-100 bg-indigo-50/20 p-3.5 rounded-xl space-y-2.5">
                       <div className="text-xs font-bold text-indigo-900">Configurações de Fluxo Comercial</div>
-                      <div className="grid grid-cols-2 gap-3.5 text-xs">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
                         <div>
                           <label className="text-slate-500 block mb-1">Mudar Funil Comercial:</label>
                           <select
@@ -1679,7 +1851,7 @@ export default function VendaForm({ selectedSaleId, onClearSelectedSale, createR
                 </div>
 
                 {/* 2. Product catalogue selection with automatic compatibility filters */}
-                <div className="space-y-4">
+                <div id="sale-step-accessories" className="space-y-4 scroll-mt-24">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-1 flex-wrap gap-1">
                     <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest border-l-2 border-blue-900 pl-2">
                       Catálogo compatível com {carModel}
@@ -1877,7 +2049,7 @@ export default function VendaForm({ selectedSaleId, onClearSelectedSale, createR
                   </div>
 
                   {/* Financial calculation box */}
-                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-150 space-y-3.5">
+                  <div id="sale-step-review" className="bg-slate-50 p-4 rounded-xl border border-slate-150 space-y-3.5 scroll-mt-24">
                     <div className="text-xs font-bold text-slate-800 uppercase tracking-widest">
                       Resumo Financeiro da Proposta
                     </div>
@@ -1993,7 +2165,7 @@ export default function VendaForm({ selectedSaleId, onClearSelectedSale, createR
               </div>
 
               {/* Form Actions bar */}
-              <div className="flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="hidden md:flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                   {editingSale && (
                     <>
@@ -2040,6 +2212,31 @@ export default function VendaForm({ selectedSaleId, onClearSelectedSale, createR
                   </button>
                 </div>
               </div>
+
+              <MobileActionBar
+                summary={
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-bold text-slate-500">Total</span>
+                    <span className="font-mono text-base font-black text-[#002C5F]">
+                      {calculatedTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    </span>
+                  </div>
+                }
+              >
+                <button
+                  type="button"
+                  onClick={() => setIsFormOpen(false)}
+                  className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs font-black uppercase text-slate-600"
+                >
+                  Fechar
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-xl bg-[#002C5F] px-4 py-3 text-xs font-black uppercase text-white"
+                >
+                  {editingSale ? 'Atualizar' : 'Salvar'}
+                </button>
+              </MobileActionBar>
             </form>
 
             {/* Display timeline events and historical contact entries of sale if editing */}

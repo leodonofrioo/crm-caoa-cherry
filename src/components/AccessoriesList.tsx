@@ -4,7 +4,8 @@ import { ALLOWED_CAR_MODELS } from '../data/accessories';
 import { getCategoryConfig } from '../data/categoryConfig';
 import { AccessoryCategory, Product, ProductVariation, VehicleCompatibility } from '../types';
 import type { CategoryFieldConfig } from '../data/categoryConfig';
-import { Check, ChevronDown, ChevronUp, Edit, Plus, Search, Tag, Trash, XCircle } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, Edit, Filter, Plus, Search, Tag, Trash, XCircle } from 'lucide-react';
+import { MobileFilterSheet, MobilePageHeader } from './mobile';
 
 const SOLAR_FILM_CATEGORY = 'Película Solar';
 
@@ -102,6 +103,7 @@ export default function AccessoriesList() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
   const [selectedModel, setSelectedModel] = useState('Todos');
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formName, setFormName] = useState('');
@@ -408,8 +410,16 @@ export default function AccessoriesList() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in relative font-sans text-slate-800">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 pb-5">
+    <div className="space-y-4 md:space-y-6 animate-fade-in relative font-sans text-slate-800">
+      <MobilePageHeader
+        title="Catálogo"
+        description="Produtos, variações e compatibilidade por carro."
+        actionLabel="Cadastrar produto"
+        actionIcon={<Plus className="h-4 w-4" />}
+        onAction={openCreateForm}
+      />
+
+      <div className="hidden md:flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 pb-5">
         <div>
           <h1 className="text-3xl font-display font-bold tracking-tight text-[#002C5F] uppercase">Catálogo de Produtos</h1>
           <p className="text-sm text-slate-500 mt-1 font-medium">
@@ -424,7 +434,55 @@ export default function AccessoriesList() {
         </button>
       </div>
 
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs grid grid-cols-1 md:grid-cols-[1fr_180px_160px] gap-4 items-center">
+      <div className="md:hidden space-y-2 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+        <div className="relative">
+          <Search className="w-4.5 h-4.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            placeholder="Buscar produto ou variação..."
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 text-sm font-semibold text-slate-700 focus:outline-none"
+          />
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowMobileFilters(true)}
+          className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-blue-100 bg-blue-50 text-xs font-black uppercase tracking-wide text-[#002C5F]"
+        >
+          <Filter className="h-4 w-4" />
+          {activeSelectedCategory === 'Todos' ? 'Todas categorias' : activeSelectedCategory} · {selectedModel === 'Todos' ? 'Todos carros' : selectedModel}
+        </button>
+      </div>
+
+      <MobileFilterSheet title="Filtros do catálogo" open={showMobileFilters} onClose={() => setShowMobileFilters(false)}>
+        <div className="space-y-4">
+          <label className="space-y-2 text-xs font-black uppercase tracking-wide text-slate-500">
+            <span>Categoria</span>
+            <select
+              value={activeSelectedCategory}
+              onChange={(event) => setSelectedCategory(event.target.value)}
+              className="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm font-bold normal-case tracking-normal text-slate-700"
+            >
+              <option value="Todos">Todas Categorias</option>
+              {categoryFilterOptions.map((category) => <option key={category} value={category}>{category}</option>)}
+            </select>
+          </label>
+          <label className="space-y-2 text-xs font-black uppercase tracking-wide text-slate-500">
+            <span>Carro</span>
+            <select
+              value={selectedModel}
+              onChange={(event) => setSelectedModel(event.target.value)}
+              className="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm font-bold normal-case tracking-normal text-slate-700"
+            >
+              <option value="Todos">Todos os Carros</option>
+              {ALLOWED_CAR_MODELS.map((model) => <option key={model} value={model}>{model}</option>)}
+            </select>
+          </label>
+        </div>
+      </MobileFilterSheet>
+
+      <div className="hidden md:grid bg-white p-4 rounded-xl border border-slate-200 shadow-xs grid-cols-1 md:grid-cols-[1fr_180px_160px] gap-4 items-center">
         <div className="relative">
           <Search className="w-4.5 h-4.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
@@ -540,13 +598,15 @@ export default function AccessoriesList() {
       </div>
 
       {isFormOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center p-4 z-50 animate-fade-in text-slate-800 overflow-y-auto">
-          <div className="bg-white rounded-2xl max-w-3xl w-full p-6 shadow-xl border border-slate-200 space-y-4 my-8 max-h-[95vh] flex flex-col">
-            <h3 className="text-lg font-bold text-slate-800 uppercase tracking-tight pb-2 border-b border-slate-100 flex items-center gap-2">
-              <Tag className="w-5 h-5 text-[#002C5F]" />
-              {editingId ? 'Editar Produto' : 'Cadastrar Produto'}
-            </h3>
-            <form onSubmit={saveForm} className="space-y-4 text-xs overflow-y-auto flex-1 pr-1">
+        <div className="fixed inset-0 bg-slate-900/60 flex items-start md:items-center justify-center p-0 md:p-4 z-[70] animate-fade-in text-slate-800 overflow-y-auto">
+          <div className="bg-white rounded-none md:rounded-2xl max-w-3xl w-full h-[100dvh] md:h-auto p-4 md:p-6 shadow-xl border border-slate-200 space-y-4 md:my-8 max-h-[100dvh] md:max-h-[95vh] flex flex-col">
+            <div className="sticky top-0 z-20 -mx-4 -mt-4 bg-white px-4 pt-4 md:static md:m-0 md:p-0">
+              <h3 className="text-base md:text-lg font-bold text-slate-800 uppercase tracking-tight pb-3 border-b border-slate-100 flex items-center gap-2">
+                <Tag className="w-5 h-5 text-[#002C5F]" />
+                {editingId ? 'Editar Produto' : 'Cadastrar Produto'}
+              </h3>
+            </div>
+            <form onSubmit={saveForm} className="space-y-4 text-xs overflow-y-auto flex-1 pr-1 pb-4">
               <div className="grid grid-cols-1 md:grid-cols-[1fr_260px] gap-4">
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700">Produto principal *</label>
@@ -837,7 +897,7 @@ export default function AccessoriesList() {
                 Produto ativo para vendas
               </label>
 
-              <div className="flex justify-end gap-2 border-t border-slate-100 pt-4">
+              <div className="sticky bottom-0 -mx-1 flex justify-end gap-2 border-t border-slate-100 bg-white/95 px-1 pt-4 pb-2 backdrop-blur">
                 <button type="button" onClick={() => setIsFormOpen(false)} className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200">
                   Cancelar
                 </button>

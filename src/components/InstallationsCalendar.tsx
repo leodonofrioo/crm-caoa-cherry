@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useCRM, getSimulatedToday } from '../context/CRMContext';
 import { InstallationStatus, PaymentStatus } from '../types';
 import {
@@ -22,6 +22,7 @@ import {
   Search,
   User,
 } from 'lucide-react';
+import { MobileFilterSheet, MobilePageHeader, useIsMobile } from './mobile';
 
 type CalendarView = 'month' | 'week' | 'day' | 'list';
 type QuickFilter = 'all' | 'overdue' | 'today' | 'next3' | 'next7' | 'noDate' | 'paidWaiting' | 'unpaidSoon';
@@ -143,6 +144,8 @@ function InstallationCard({ entry, onSelectSale }: { entry: InstallationEntry; o
 export default function InstallationsCalendar({ onSelectSale }: InstallationsCalendarProps) {
   const { sales, saleItems } = useCRM();
   const today = getSimulatedToday();
+  const isMobile = useIsMobile();
+  const defaultedMobileView = useRef(false);
   const [view, setView] = useState<CalendarView>('month');
   const [currentDate, setCurrentDate] = useState(today);
   const [searchTerm, setSearchTerm] = useState('');
@@ -151,6 +154,13 @@ export default function InstallationsCalendar({ onSelectSale }: InstallationsCal
   const [responsibleFilter, setResponsibleFilter] = useState('Todos');
   const [dateFilter, setDateFilter] = useState('');
   const [quickFilter, setQuickFilter] = useState<QuickFilter>('all');
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
+
+  useEffect(() => {
+    if (!isMobile || defaultedMobileView.current) return;
+    defaultedMobileView.current = true;
+    setView('list');
+  }, [isMobile]);
 
   const entries = useMemo<InstallationEntry[]>(
     () => buildInstallationEntries(sales, saleItems, today),
@@ -250,8 +260,23 @@ export default function InstallationsCalendar({ onSelectSale }: InstallationsCal
   const weekDates = getWeekDates(currentDate);
 
   return (
-    <div className="space-y-6 animate-fade-in text-slate-800">
-      <div className="flex flex-col gap-4 border-b border-slate-100 pb-5 lg:flex-row lg:items-center lg:justify-between">
+    <div className="space-y-4 md:space-y-6 animate-fade-in text-slate-800">
+      <MobilePageHeader
+        title="Instalações"
+        description="Agenda, atrasos e pagamentos próximos."
+        meta={
+          <button
+            type="button"
+            onClick={() => setShowMobileFilters(true)}
+            className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-[10px] font-black uppercase text-[#002C5F]"
+          >
+            <Filter className="h-3.5 w-3.5" />
+            Filtros
+          </button>
+        }
+      />
+
+      <div className="hidden md:flex flex-col gap-4 border-b border-slate-100 pb-5 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-3xl font-display font-bold tracking-tight text-[#002C5F]">
             Calendário de Instalações
@@ -292,7 +317,65 @@ export default function InstallationsCalendar({ onSelectSale }: InstallationsCal
         ))}
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="md:hidden flex flex-wrap items-center gap-2">
+        {Object.entries(VIEW_LABELS).map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setView(id as CalendarView)}
+            className={`rounded-xl border px-3 py-2 text-xs font-black uppercase tracking-wide transition-all ${
+              view === id
+                ? 'border-[#002C5F] bg-[#002C5F] text-white'
+                : 'border-slate-200 bg-white text-slate-600'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <MobileFilterSheet title="Filtros de instalações" open={showMobileFilters} onClose={() => setShowMobileFilters(false)}>
+        <div className="space-y-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Cliente, veículo, item..."
+              className="w-full rounded-xl border border-slate-200 py-3 pl-9 pr-3 text-sm font-semibold text-slate-700 focus:outline-none"
+            />
+          </div>
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as InstallationStatus | 'Todos')} className="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm font-bold text-slate-700">
+            <option value="Todos">Status instalação</option>
+            {INSTALLATION_STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}
+          </select>
+          <select value={paymentFilter} onChange={(e) => setPaymentFilter(e.target.value as PaymentStatus | 'Todos')} className="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm font-bold text-slate-700">
+            <option value="Todos">Status pagamento</option>
+            {PAYMENT_STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}
+          </select>
+          <select value={responsibleFilter} onChange={(e) => setResponsibleFilter(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm font-bold text-slate-700">
+            <option value="Todos">Responsável</option>
+            {responsibleOptions.map((name) => <option key={name} value={name}>{name}</option>)}
+          </select>
+          <input type="date" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm font-mono text-slate-700" />
+          <div className="flex flex-wrap gap-2">
+            {QUICK_FILTERS.map((filter) => (
+              <button
+                key={filter.id}
+                type="button"
+                onClick={() => setQuickFilter(filter.id)}
+                className={`rounded-full border px-3 py-1.5 text-[10px] font-black uppercase ${
+                  quickFilter === filter.id ? 'border-[#002C5F] bg-[#002C5F] text-white' : 'border-slate-200 bg-white text-slate-500'
+                }`}
+              >
+                {filter.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </MobileFilterSheet>
+
+      <div className="hidden md:block rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-6">
           <div className="relative lg:col-span-2">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -401,13 +484,20 @@ export default function InstallationsCalendar({ onSelectSale }: InstallationsCal
 
       {view === 'month' && (
         <div className="space-y-4">
-          <div className="grid grid-cols-7 gap-2 text-center text-[10px] font-black uppercase tracking-widest text-slate-400">
+          <div className="hidden md:grid grid-cols-7 gap-2 text-center text-[10px] font-black uppercase tracking-widest text-slate-400">
             {WEEK_DAYS.map((day) => <div key={day}>{day}</div>)}
           </div>
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-7">
+          <div className="hidden md:grid grid-cols-1 gap-3 md:grid-cols-7">
             {getMonthGrid(currentDate).map((day) => (
               <div key={day.date}>
                 {renderDateColumn(day.date, false, !day.inCurrentMonth)}
+              </div>
+            ))}
+          </div>
+          <div className="md:hidden space-y-3">
+            {filteredEntries.map((entry) => (
+              <div key={entry.id}>
+                <InstallationCard entry={entry} onSelectSale={onSelectSale} />
               </div>
             ))}
           </div>
