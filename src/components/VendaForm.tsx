@@ -2210,7 +2210,9 @@ export default function VendaForm({ selectedSaleId, onClearSelectedSale, createR
                         {product.variations.map((variation) => {
                           const alreadyAdded = selectedAccessoryIds.includes(variation.id);
                           const isReplacing = Boolean(selectedPackageSlot.selectedAccessory && !alreadyAdded);
-                          const bonusAmount = variation.commissionBonusAmount || accessories.find((candidate) => candidate.id === variation.id)?.commissionBonusAmount || 0;
+                          const accessory = accessories.find((candidate) => candidate.id === variation.id);
+                          const bonusAmount = variation.commissionBonusAmount || accessory?.commissionBonusAmount || 0;
+                          const bonusPercent = variation.commissionBonusPercent || accessory?.commissionBonusPercent || 0;
                           return (
                             <div key={variation.id} className="rounded-xl border border-slate-100 bg-slate-50/70 p-2.5">
                               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -2222,6 +2224,11 @@ export default function VendaForm({ selectedSaleId, onClearSelectedSale, createR
                                     {bonusAmount > 0 && (
                                       <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-emerald-700">
                                         Bônus {bonusAmount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                      </span>
+                                    )}
+                                    {bonusPercent > 0 && (
+                                      <span className="rounded bg-blue-50 px-1.5 py-0.5 text-blue-700">
+                                        Bônus {bonusPercent}%
                                       </span>
                                     )}
                                     {alreadyAdded && <span className="rounded bg-blue-50 px-1.5 py-0.5 text-blue-700">No slot</span>}

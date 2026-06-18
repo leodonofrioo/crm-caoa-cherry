@@ -91,6 +91,11 @@ const unionCompatibilities = (variations: ProductVariation[]): VehicleCompatibil
 const formatCompatibility = (compatibility: VehicleCompatibility) =>
   [compatibility.model, compatibility.version, compatibility.year].filter(Boolean).join(' - ');
 
+const optionalPositiveNumber = (value: unknown) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
+};
+
 export default function AccessoriesList() {
   const { products, carModels, settings, updateSettings, addProduct, updateProduct, deleteProduct, showAlert, showConfirm } = useCRM();
   const defaultFormCategory = settings.productCategories?.[0] || products[0]?.category || 'Outro';
@@ -365,6 +370,8 @@ export default function AccessoriesList() {
         name: variation.name.trim(),
         description: variation.description.trim(),
         price: Number(variation.price),
+        commissionBonusAmount: optionalPositiveNumber(variation.commissionBonusAmount),
+        commissionBonusPercent: optionalPositiveNumber(variation.commissionBonusPercent),
         timeEstimate: Number(variation.timeEstimate),
         compatibilities: variation.compatibilities.filter((compatibility) => ALLOWED_CAR_MODELS.includes(compatibility.model)),
       }))
@@ -495,6 +502,20 @@ export default function AccessoriesList() {
                         </div>
                         <span className="font-mono text-[10px] font-bold text-slate-400">{variation.timeEstimate}m</span>
                       </div>
+                      {(variation.commissionBonusAmount || variation.commissionBonusPercent) && (
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {variation.commissionBonusAmount ? (
+                            <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-[9px] font-bold text-emerald-700 border border-emerald-100">
+                              + {variation.commissionBonusAmount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                            </span>
+                          ) : null}
+                          {variation.commissionBonusPercent ? (
+                            <span className="rounded bg-blue-50 px-1.5 py-0.5 text-[9px] font-bold text-[#002C5F] border border-blue-100">
+                              + {variation.commissionBonusPercent}% comissão
+                            </span>
+                          ) : null}
+                        </div>
+                      )}
                       <div className="mt-2 flex flex-wrap gap-1">
                         {variation.compatibilities.map((compatibility) => (
                           <span key={compatibility.model} className="rounded bg-white px-1.5 py-0.5 text-[9px] font-bold text-slate-500 border border-slate-200">
@@ -600,6 +621,37 @@ export default function AccessoriesList() {
                       <input value={variation.name} onChange={(event) => updateVariation(variation.id, { name: event.target.value })} placeholder="G20, Antivandalismo, Nanocerâmica..." className="p-2.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-700" />
                       <input type="number" step="0.01" value={variation.price || ''} onChange={(event) => updateVariation(variation.id, { price: Number(event.target.value) })} placeholder="Preço" className="p-2.5 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-700" />
                       <input type="number" value={variation.timeEstimate || ''} onChange={(event) => updateVariation(variation.id, { timeEstimate: Number(event.target.value) })} placeholder="Minutos" className="p-2.5 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-700" />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <label className="space-y-1">
+                        <span className="block text-[10px] font-black uppercase tracking-wide text-slate-500">
+                          Comissão extra R$
+                        </span>
+                        <input
+                          type="number"
+                          min={0}
+                          step="0.01"
+                          value={variation.commissionBonusAmount ?? ''}
+                          onChange={(event) => updateVariation(variation.id, { commissionBonusAmount: event.target.value === '' ? undefined : Number(event.target.value) })}
+                          placeholder="Ex.: 50,00"
+                          className="w-full rounded-xl border border-slate-200 p-2.5 text-xs font-mono font-bold text-slate-700 focus:outline-none focus:border-[#002C5F]"
+                        />
+                      </label>
+                      <label className="space-y-1">
+                        <span className="block text-[10px] font-black uppercase tracking-wide text-slate-500">
+                          Comissão extra %
+                        </span>
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          step="0.1"
+                          value={variation.commissionBonusPercent ?? ''}
+                          onChange={(event) => updateVariation(variation.id, { commissionBonusPercent: event.target.value === '' ? undefined : Number(event.target.value) })}
+                          placeholder="Ex.: 2,5"
+                          className="w-full rounded-xl border border-slate-200 p-2.5 text-xs font-mono font-bold text-slate-700 focus:outline-none focus:border-[#002C5F]"
+                        />
+                      </label>
                     </div>
                     <textarea value={variation.description} onChange={(event) => updateVariation(variation.id, { description: event.target.value })} rows={2} placeholder="Descrição específica da variação" className="w-full p-2.5 border border-slate-200 rounded-xl text-xs text-slate-700" />
                     {showSolarFilmFields && formCategoryFields.length > 0 && (
