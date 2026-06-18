@@ -48,21 +48,25 @@ const authUser = (): AuthUser => ({
   displayName: process.env.CRM_AUTH_DISPLAY_NAME || 'Thayná Reis',
 });
 
-const canTryLogin = (key: string) => {
+const isRateLimited = (key: string) => {
+  const now = Date.now();
+  const current = attempts.get(key);
+  return Boolean(current && current.resetAt >= now && current.count >= 5);
+};
+
+const registerFailedLogin = (key: string) => {
   const now = Date.now();
   const current = attempts.get(key);
   if (!current || current.resetAt < now) {
     attempts.set(key, { count: 1, resetAt: now + 15 * 60 * 1000 });
-    return true;
+    return;
   }
   current.count += 1;
-  return current.count <= 5;
 };
 
 const validatePassword = async (password: string) => {
   const hash = process.env.CRM_AUTH_PASSWORD_HASH;
-  if (hash) return bcrypt.compare(password, hash);
-  if (process.env.NODE_ENV === 'production') return false;
+  if (hash) return bcrypt.compare(password, hash.trim());
   const devPassword = process.env.CRM_AUTH_PASSWORD || '';
   return Boolean(devPassword) && safeEqual(password, devPassword);
 };
@@ -77,16 +81,23 @@ const cookieOptions = () => ({
 
 export const loginHandler = async (req: Request, res: Response) => {
   const ip = req.ip || req.socket.remoteAddress || 'unknown';
-  if (!canTryLogin(ip)) {
+  if (isRateLimited(ip)) {
     res.status(429).json({ ok: false, message: 'Muitas tentativas. Aguarde alguns minutos.' });
     return;
   }
 
   const user = authUser();
-  const login = String(req.body?.login || '');
+  const login = String(req.body?.login || '').trim();
   const password = String(req.body?.password || '');
   const ok = Boolean(user.login) && safeEqual(login, user.login) && await validatePassword(password);
   if (!ok) {
+    registerFailedLogin(ip);
+    console.warn('Falha de login CRM', {
+      loginConfigured: Boolean(user.login),
+      loginMatches: Boolean(user.login) && safeEqual(login, user.login),
+      passwordHashConfigured: Boolean(process.env.CRM_AUTH_PASSWORD_HASH),
+      passwordFallbackConfigured: Boolean(process.env.CRM_AUTH_PASSWORD),
+    });
     res.status(401).json({ ok: false, message: 'Login ou senha inválidos.' });
     return;
   }
