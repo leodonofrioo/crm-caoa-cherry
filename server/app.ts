@@ -411,6 +411,10 @@ export const createApp = () => {
     }
   });
 
+  app.use('/api', (_req, res) => {
+    res.status(404).json({ ok: false, message: 'Rota não encontrada.' });
+  });
+
   app.use(express.static(distDir));
   app.get('*', (_req, res) => {
     res.sendFile(path.join(distDir, 'index.html'));

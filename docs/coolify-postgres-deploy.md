@@ -32,7 +32,7 @@ npm run build
 
 Start:
 ```bash
-npm run db:migrate && npm run start
+npm run db:wait && npm run db:migrate && npm run start
 ```
 
 Healthcheck:
