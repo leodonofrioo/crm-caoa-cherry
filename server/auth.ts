@@ -66,9 +66,9 @@ const registerFailedLogin = (key: string) => {
 
 const validatePassword = async (password: string) => {
   const hash = process.env.CRM_AUTH_PASSWORD_HASH;
-  if (hash) return bcrypt.compare(password, hash.trim());
-  const devPassword = process.env.CRM_AUTH_PASSWORD || '';
-  return Boolean(devPassword) && safeEqual(password, devPassword);
+  const plainPassword = process.env.CRM_AUTH_PASSWORD || '';
+  if (hash && await bcrypt.compare(password, hash.trim())) return true;
+  return Boolean(plainPassword) && safeEqual(password, plainPassword);
 };
 
 const cookieOptions = () => ({
