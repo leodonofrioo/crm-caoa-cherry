@@ -28,7 +28,6 @@ import {
   Award,
   Settings,
   LogOut,
-  LockKeyhole,
 } from 'lucide-react';
 import { SalesStatus } from './types';
 
@@ -71,59 +70,96 @@ function LoginScreen({ onAuthenticated }: { onAuthenticated: (user: AuthUser) =>
   };
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-4">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-sm rounded-2xl border border-white/10 bg-white p-6 text-slate-900 shadow-2xl space-y-5"
-      >
-        <div className="space-y-2">
-          <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#002C5F] text-white">
-            <LockKeyhole className="h-5 w-5" />
-          </div>
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#05070B] p-4 text-white">
+      <div className="absolute inset-0 bg-[linear-gradient(135deg,#05070B_0%,#07111f_48%,#001f43_100%)]" />
+      <div className="absolute inset-x-0 top-0 h-1 bg-[#D71920]" />
+      <div className="absolute bottom-0 left-0 h-24 w-full bg-[linear-gradient(180deg,transparent_0%,rgba(215,25,32,0.12)_100%)]" />
+
+      <section className="relative grid w-full max-w-5xl overflow-hidden rounded-[28px] border border-white/10 bg-white shadow-2xl lg:grid-cols-[1.05fr_0.95fr]">
+        <div className="hidden min-h-[560px] flex-col justify-between bg-[#07111f] p-10 text-white lg:flex">
           <div>
-            <h1 className="text-xl font-black text-slate-900">Acesso ao CRM</h1>
-            <p className="text-xs font-semibold text-slate-500">Sessão protegida por credenciais locais.</p>
+            <img
+              src="/brands/caoa-chery-logo.png"
+              alt="CAOA CHERY"
+              className="h-28 w-72 object-contain object-left"
+            />
+            <div className="mt-10 max-w-md">
+              <h1 className="text-4xl font-black uppercase leading-tight tracking-tight">
+                Accessories CRM
+              </h1>
+              <p className="mt-4 text-sm font-semibold leading-6 text-slate-300">
+                Gestão de propostas, acessórios, instalação e comissões com padrão CAOA Chery.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 text-xs">
+            <div className="border-l-2 border-[#D71920] bg-white/5 px-4 py-3">
+              <div className="flex items-center gap-2 font-black uppercase tracking-widest text-white">
+                <UserCheck className="h-4 w-4 text-[#D71920]" />
+                Sessão
+              </div>
+              <p className="mt-2 font-semibold text-slate-300">Acesso local protegido.</p>
+            </div>
+            <div className="border-l-2 border-[#D71920] bg-white/5 px-4 py-3">
+              <div className="flex items-center gap-2 font-black uppercase tracking-widest text-white">
+                <Award className="h-4 w-4 text-[#D71920]" />
+                Vendas
+              </div>
+              <p className="mt-2 font-semibold text-slate-300">Catálogo e comissão no mesmo fluxo.</p>
+            </div>
           </div>
         </div>
 
-        <div className="space-y-3">
-          <div className="space-y-1">
-            <label className="text-xs font-bold uppercase tracking-widest text-slate-500">Login</label>
-            <input
-              value={login}
-              onChange={(event) => setLogin(event.target.value)}
-              autoComplete="username"
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-bold outline-none focus:border-blue-300 focus:bg-white"
-              required
-            />
-          </div>
-          <div className="space-y-1">
-            <label className="text-xs font-bold uppercase tracking-widest text-slate-500">Senha</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              autoComplete="current-password"
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-bold outline-none focus:border-blue-300 focus:bg-white"
-              required
-            />
-          </div>
-        </div>
-
-        {error && (
-          <div className="rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-xs font-bold text-red-700">
-            {error}
-          </div>
-        )}
-
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full rounded-xl bg-[#002C5F] px-4 py-3 text-xs font-black uppercase tracking-widest text-white hover:bg-blue-950 disabled:bg-slate-300"
+        <form
+          onSubmit={handleSubmit}
+          className="flex min-h-[560px] flex-col justify-center bg-white p-6 text-slate-900 sm:p-10"
         >
-          {isSubmitting ? 'Validando' : 'Entrar'}
-        </button>
-      </form>
+          <div className="space-y-7">
+            <h1 className="sr-only">Acesso ao CRM</h1>
+
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-black uppercase tracking-widest text-slate-500">Login</label>
+                <input
+                  value={login}
+                  onChange={(event) => setLogin(event.target.value)}
+                  autoComplete="username"
+                  placeholder="Usuário"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-[#002C5F] focus:bg-white focus:ring-4 focus:ring-blue-950/10"
+                  required
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-black uppercase tracking-widest text-slate-500">Senha</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  autoComplete="current-password"
+                  placeholder="Senha de acesso"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-[#002C5F] focus:bg-white focus:ring-4 focus:ring-blue-950/10"
+                  required
+                />
+              </div>
+            </div>
+
+            {error && (
+              <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-xs font-bold text-red-700">
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full rounded-xl bg-[#002C5F] px-4 py-3.5 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-blue-950/20 transition-all hover:bg-blue-950 disabled:bg-slate-300 disabled:shadow-none"
+            >
+              {isSubmitting ? 'Validando' : 'Entrar'}
+            </button>
+          </div>
+        </form>
+      </section>
     </main>
   );
 }
@@ -158,8 +194,15 @@ function AuthGate({ children }: { children: (user: AuthUser, onLogout: () => voi
 
   if (status === 'checking') {
     return (
-      <main className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
-        <div className="text-xs font-black uppercase tracking-widest text-slate-300">Validando sessão</div>
+      <main className="flex min-h-screen items-center justify-center bg-[#05070B] text-white">
+        <div className="flex flex-col items-center gap-4">
+          <img
+            src="/brands/caoa-chery-logo.png"
+            alt="CAOA CHERY"
+            className="h-20 w-56 object-contain"
+          />
+          <div className="text-xs font-black uppercase tracking-widest text-slate-300">Validando sessão</div>
+        </div>
       </main>
     );
   }

@@ -171,7 +171,7 @@ const createAuthMiddleware = (env: Record<string, string>) => {
         ? authorization.slice(7)
         : decodeURIComponent(getCookieValue(req, AUTH_COOKIE_NAME) || '');
       if (!token || !verifyToken(token, authLogin, authSecret)) {
-        sendJson(res, 401, {ok: false});
+        sendJson(res, 200, {ok: false});
         return;
       }
       sendJson(res, 200, {ok: true, user: {login: authLogin, displayName: authDisplayName}});

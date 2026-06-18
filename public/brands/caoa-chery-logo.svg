@@ -1,11 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 72" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 88" role="img" aria-labelledby="title desc">
   <title id="title">CAOA CHERY</title>
-  <desc id="desc">Logotipo CAOA CHERY em azul e vermelho.</desc>
-  <g fill="none" fill-rule="evenodd">
-    <path fill="#003B78" d="M12 16h108c8.8 0 16 7.2 16 16v8c0 8.8-7.2 16-16 16H12V16Z" opacity=".06"/>
-    <text x="10" y="43" fill="#003B78" font-family="Arial, Helvetica, sans-serif" font-size="31" font-weight="800" letter-spacing="1.4">CAOA</text>
-    <path fill="#D71920" d="M135 17h10l8 24 8-24h10l-13 38h-10l-13-38Zm44 0h10v14h17V17h10v38h-10V39h-17v16h-10V17Zm47 0h32v8h-22v7h19v8h-19v7h23v8h-33V17Z"/>
-    <path fill="#D71920" d="M263.5 18.8c5.7 4.2 8.5 9.9 8.5 17.2 0 7.2-2.8 12.9-8.5 17.1-5.3 3.9-12 5.9-20.1 5.9-8.1 0-14.8-2-20.1-5.9-5.7-4.2-8.5-9.9-8.5-17.1 0-7.3 2.8-13 8.5-17.2 5.3-3.9 12-5.8 20.1-5.8 8.1 0 14.8 1.9 20.1 5.8Zm-34.8 6.7c-3.4 2.6-5.1 6.1-5.1 10.5 0 4.3 1.7 7.8 5.1 10.4 3.6 2.7 8.5 4.1 14.7 4.1 6.1 0 11-1.4 14.6-4.1 3.4-2.6 5.1-6.1 5.1-10.4 0-4.4-1.7-7.9-5.1-10.5-3.6-2.7-8.5-4-14.6-4-6.2 0-11.1 1.3-14.7 4Z" opacity=".22"/>
-    <text x="137" y="43" fill="#D71920" font-family="Arial, Helvetica, sans-serif" font-size="31" font-weight="800" letter-spacing="1.15">CHERY</text>
+  <desc id="desc">Logotipo CAOA CHERY em cinza escuro e vermelho.</desc>
+  <rect width="360" height="88" fill="none"/>
+  <g font-family="Arial Black, Arial, Helvetica, sans-serif" font-weight="900">
+    <text x="8" y="57" fill="#55585D" font-size="46" letter-spacing="3">CAOA</text>
+    <text x="165" y="57" fill="#ED1C24" font-size="46" letter-spacing="2">CHERY</text>
   </g>
 </svg>
