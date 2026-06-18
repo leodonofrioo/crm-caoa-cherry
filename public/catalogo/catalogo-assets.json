@@ -1,0 +1,30 @@
+[
+  {
+    "name": "retrovisor-insulfilm",
+    "imageUrl": "/catalogo/retrovisor-insulfilm.png",
+    "kind": "pelicula-marketing-asset",
+    "sku": null,
+    "source": "public/catalogo"
+  },
+  {
+    "name": "visao-externa-insulfilm-dia",
+    "imageUrl": "/catalogo/visao-externa-insulfilm-dia.png",
+    "kind": "pelicula-marketing-asset",
+    "sku": null,
+    "source": "public/catalogo"
+  },
+  {
+    "name": "visao-externa-insulfilm-noite",
+    "imageUrl": "/catalogo/visao-externa-insulfilm-noite.png",
+    "kind": "pelicula-marketing-asset",
+    "sku": null,
+    "source": "public/catalogo"
+  },
+  {
+    "name": "visao-interna-insulfilm",
+    "imageUrl": "/catalogo/visao-interna-insulfilm.png",
+    "kind": "pelicula-marketing-asset",
+    "sku": null,
+    "source": "public/catalogo"
+  }
+]

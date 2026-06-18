@@ -1,0 +1,214 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String   @id @default(cuid())
+  login        String   @unique
+  passwordHash String
+  displayName  String
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Setting {
+  id        String   @id @default("singleton")
+  data      Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}
+
+model CarModel {
+  id        String       @id
+  name      String
+  active    Boolean      @default(true)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  versions  CarVersion[]
+
+  @@map("car_models")
+}
+
+model CarVersion {
+  id        String    @id
+  modelId   String
+  name      String
+  active    Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  model     CarModel  @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  years     CarYear[]
+
+  @@unique([modelId, name])
+  @@map("car_versions")
+}
+
+model CarYear {
+  id        String     @id
+  versionId String
+  year      String
+  active    Boolean    @default(true)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  version   CarVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  @@unique([versionId, year])
+  @@map("car_years")
+}
+
+model Product {
+  id              String                 @id
+  name            String
+  description     String
+  category        String
+  imageUrl        String?
+  attributes      Json?
+  universal       Boolean                @default(false)
+  active          Boolean                @default(true)
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+  variations      ProductVariation[]
+  compatibilities VehicleCompatibility[]
+
+  @@index([name, category])
+  @@map("products")
+}
+
+model ProductVariation {
+  id                    String                 @id
+  productId             String
+  name                  String
+  description           String
+  imageUrl              String?
+  attributes            Json?
+  priceCents            Int
+  commissionBonusCents  Int?
+  commissionBonusPercent Float?
+  timeEstimate          Int
+  active                Boolean                @default(true)
+  sku                   String?
+  legacyAccessoryIds    Json?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  product               Product                @relation(fields: [productId], references: [id], onDelete: Cascade)
+  compatibilities       VehicleCompatibility[]
+
+  @@index([productId, name])
+  @@map("product_variations")
+}
+
+model VehicleCompatibility {
+  id          String            @id @default(cuid())
+  productId   String?
+  variationId String?
+  model       String
+  version     String?
+  year        String?
+  product     Product?          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variation   ProductVariation? @relation(fields: [variationId], references: [id], onDelete: Cascade)
+
+  @@index([model, version, year])
+  @@map("vehicle_compatibilities")
+}
+
+model Sale {
+  id                    String      @id
+  clientName            String
+  clientPhone           String
+  carModel              String
+  carVersion            String
+  carYear               String
+  carSalespersonName    String?
+  installerName         String
+  installationDate      String
+  discountCents         Int
+  subtotalCents         Int
+  totalCents            Int
+  status                String
+  lostReason            String?
+  internalNotes         String
+  createdAt             DateTime
+  commissionPercent     Float
+  commissionCents       Int
+  baseCommissionCents   Int?
+  productBonusCents     Int?
+  goalExtraCents        Int?
+  goalBonusCents        Int?
+  filmConfiguration     Json?
+  commissionStatus      String
+  commissionPaidAt      DateTime?
+  paymentStatus         String
+  paymentForecastDate   String?
+  partialPaidCents      Int?
+  installationStatus    String
+  installationNotes     String?
+  items                 SaleItem[]
+  followups             Followup[]
+  events                SaleEvent[]
+
+  @@index([createdAt])
+  @@index([status])
+  @@map("sales")
+}
+
+model SaleItem {
+  id           String @id
+  saleId       String
+  accessoryId  String
+  productId    String?
+  variationId  String?
+  vehicleModel String?
+  productName  String?
+  variationName String?
+  description  String?
+  timeEstimate Int?
+  name         String
+  priceCents   Int
+  sale         Sale   @relation(fields: [saleId], references: [id], onDelete: Cascade)
+
+  @@index([saleId])
+  @@map("sale_items")
+}
+
+model Followup {
+  id        String   @id
+  saleId    String
+  clientName String
+  carModel  String
+  type      String
+  status    String
+  dueDate   String
+  notes     String
+  createdAt DateTime
+  sale      Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+
+  @@index([saleId])
+  @@index([dueDate, status])
+  @@map("followups")
+}
+
+model SaleEvent {
+  id            String   @id
+  saleId        String
+  type          String
+  description   String
+  createdAt     DateTime
+  field         String?
+  previousValue String?
+  nextValue     String?
+  changedBy     String?
+  sale          Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+
+  @@index([saleId])
+  @@index([createdAt])
+  @@map("sale_events")
+}

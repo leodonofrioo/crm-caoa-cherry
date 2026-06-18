@@ -1,0 +1,421 @@
+{
+  "tipo": "modelo_json_para_ia_criar_produtos_crm_thayna_reis",
+  "versao_modelo": 1,
+  "objetivo": "Use este modelo para treinar uma IA a gerar JSON de produtos, variacoes e compatibilidades no formato aceito pelo CRM.",
+  "formato_de_importacao_do_crm": {
+    "schema": "crm-thayna-reis-export",
+    "version": 1,
+    "exportedAt": "2026-06-18T00:00:00.000Z",
+    "source": "CRM Thayná Reis",
+    "sections": ["products"],
+    "data": {
+      "products": []
+    }
+  },
+  "modelos_permitidos": ["Tiggo 5", "Tiggo 7", "Tiggo 8"],
+  "categorias_permitidas": [
+    "Película Solar",
+    "Película",
+    "Tapete",
+    "Proteção",
+    "Segurança",
+    "Estética",
+    "Tecnologia",
+    "Iluminação",
+    "Serviço",
+    "Outro"
+  ],
+  "instrucoes_gerais_para_ia": [
+    "A resposta final da IA deve ser JSON valido, sem markdown, sem comentarios e sem texto fora do JSON.",
+    "Use sempre o formato de importacao do CRM: schema, version, exportedAt, source, sections e data.products.",
+    "Para importar somente produtos, sections deve ser [\"products\"].",
+    "Cada produto deve ter id unico e estavel, name, description, category, compatibilities, universal, active e variations.",
+    "Cada variacao deve ter id unico e estavel, name, description, price, timeEstimate, compatibilities e active.",
+    "price deve ser numero em reais, sem R$, sem ponto de milhar e sem string. Exemplo: 1250.",
+    "timeEstimate deve ser numero inteiro em minutos. Exemplo: 90.",
+    "active deve ser true para item disponivel e false para item desativado.",
+    "imageUrl pode ser string vazia ou omitido quando nao existir imagem.",
+    "attributes pode guardar codigo, sku, transparencia, uvProtection, heatRejection, infraredRejection e outros dados tecnicos.",
+    "Nunca use nomes de modelos fora de: Tiggo 5, Tiggo 7, Tiggo 8.",
+    "Nunca use textos como TODOS, QUALQUER, ALL ou GERAL dentro de compatibilities. Use as regras estruturadas abaixo.",
+    "Se um produto tiver variacoes com compatibilidades diferentes, cada variacao deve ter sua propria lista de compatibilities.",
+    "product.compatibilities deve ser a uniao das compatibilidades das variacoes, exceto quando universal for true."
+  ],
+  "regras_de_compatibilidade": {
+    "compativel_com_todos_os_modelos_versoes_e_anos": {
+      "quando_usar": "Quando o produto serve para Tiggo 5, Tiggo 7, Tiggo 8, todas as versoes e todos os anos.",
+      "como_preencher": {
+        "product.universal": true,
+        "product.compatibilities": [],
+        "variation.compatibilities": []
+      }
+    },
+    "compativel_com_todos_os_anos_e_versoes_de_um_modelo": {
+      "quando_usar": "Quando serve para todas as versoes e anos de um modelo especifico.",
+      "exemplo": {
+        "universal": false,
+        "compatibilities": [
+          {
+            "model": "Tiggo 7"
+          }
+        ]
+      }
+    },
+    "compativel_com_uma_versao_de_um_modelo_em_todos_os_anos": {
+      "quando_usar": "Quando serve para uma versao especifica, mas em qualquer ano dessa versao.",
+      "exemplo": {
+        "universal": false,
+        "compatibilities": [
+          {
+            "model": "Tiggo 7",
+            "version": "PRO HYBRID MAX DRIVE"
+          }
+        ]
+      }
+    },
+    "compativel_com_um_modelo_em_um_ano_especifico": {
+      "quando_usar": "Quando serve para qualquer versao de um modelo, mas somente em um ano especifico.",
+      "exemplo": {
+        "universal": false,
+        "compatibilities": [
+          {
+            "model": "Tiggo 8",
+            "year": "2025"
+          }
+        ]
+      }
+    },
+    "compativel_com_uma_versao_em_um_ano_especifico": {
+      "quando_usar": "Quando serve somente para uma versao e um ano exatos.",
+      "exemplo": {
+        "universal": false,
+        "compatibilities": [
+          {
+            "model": "Tiggo 5",
+            "version": "PRO",
+            "year": "2026"
+          }
+        ]
+      }
+    },
+    "compativel_com_multiplos_modelos_ou_multiplas_versoes": {
+      "quando_usar": "Quando serve para mais de um modelo, versao ou ano especifico.",
+      "exemplo": {
+        "universal": false,
+        "compatibilities": [
+          {
+            "model": "Tiggo 5"
+          },
+          {
+            "model": "Tiggo 7",
+            "version": "SPORT",
+            "year": "2025"
+          },
+          {
+            "model": "Tiggo 8",
+            "version": "PRO PLUG-IN HYBRID"
+          }
+        ]
+      }
+    }
+  },
+  "schema_produto": {
+    "id": "prod_slug_do_produto",
+    "name": "Nome comercial do produto",
+    "description": "Descricao objetiva do produto",
+    "category": "Categoria permitida",
+    "imageUrl": "/catalogo/acessorios/imagem.png",
+    "attributes": {
+      "codigo": "5000000000",
+      "sku": "SKU-OPCIONAL",
+      "observacao": "Campo livre opcional"
+    },
+    "compatibilities": [
+      {
+        "model": "Tiggo 7",
+        "version": "PRO HYBRID MAX DRIVE",
+        "year": "2025"
+      }
+    ],
+    "universal": false,
+    "active": true,
+    "variations": [
+      {
+        "id": "prod_slug_do_produto_var_slug_da_variacao",
+        "name": "Nome da variacao",
+        "description": "Descricao da variacao",
+        "imageUrl": "/catalogo/acessorios/imagem.png",
+        "attributes": {
+          "codigo": "5000000000"
+        },
+        "price": 1250,
+        "commissionBonusAmount": 0,
+        "commissionBonusPercent": 0,
+        "timeEstimate": 90,
+        "compatibilities": [
+          {
+            "model": "Tiggo 7",
+            "version": "PRO HYBRID MAX DRIVE",
+            "year": "2025"
+          }
+        ],
+        "active": true,
+        "sku": "SKU-OPCIONAL",
+        "legacyAccessoryIds": []
+      }
+    ]
+  },
+  "exemplos_de_saida_para_ia": {
+    "produto_universal": {
+      "schema": "crm-thayna-reis-export",
+      "version": 1,
+      "exportedAt": "2026-06-18T00:00:00.000Z",
+      "source": "CRM Thayná Reis",
+      "sections": ["products"],
+      "data": {
+        "products": [
+          {
+            "id": "prod_suporte_magnetico_celular",
+            "name": "Suporte Magnético Celular",
+            "description": "Suporte magnético universal para celular.",
+            "category": "Tecnologia",
+            "imageUrl": "",
+            "attributes": {
+              "codigo": "5007200000"
+            },
+            "compatibilities": [],
+            "universal": true,
+            "active": true,
+            "variations": [
+              {
+                "id": "prod_suporte_magnetico_celular_var_padrao",
+                "name": "Padrão",
+                "description": "Suporte magnético universal para celular.",
+                "imageUrl": "",
+                "attributes": {
+                  "codigo": "5007200000"
+                },
+                "price": 235,
+                "commissionBonusAmount": 0,
+                "commissionBonusPercent": 0,
+                "timeEstimate": 20,
+                "compatibilities": [],
+                "active": true,
+                "sku": "5007200000",
+                "legacyAccessoryIds": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "produto_compativel_com_modelo_inteiro": {
+      "schema": "crm-thayna-reis-export",
+      "version": 1,
+      "exportedAt": "2026-06-18T00:00:00.000Z",
+      "source": "CRM Thayná Reis",
+      "sections": ["products"],
+      "data": {
+        "products": [
+          {
+            "id": "prod_tapete_borracha_tiggo_7",
+            "name": "Tapete Borracha",
+            "description": "Tapete de borracha para Tiggo 7.",
+            "category": "Tapete",
+            "imageUrl": "",
+            "attributes": {
+              "codigo": "5020330000"
+            },
+            "compatibilities": [
+              {
+                "model": "Tiggo 7"
+              }
+            ],
+            "universal": false,
+            "active": true,
+            "variations": [
+              {
+                "id": "prod_tapete_borracha_tiggo_7_var_padrao",
+                "name": "Padrão",
+                "description": "Tapete de borracha para todas as versões e anos do Tiggo 7.",
+                "imageUrl": "",
+                "attributes": {
+                  "codigo": "5020330000"
+                },
+                "price": 950,
+                "commissionBonusAmount": 0,
+                "commissionBonusPercent": 0,
+                "timeEstimate": 30,
+                "compatibilities": [
+                  {
+                    "model": "Tiggo 7"
+                  }
+                ],
+                "active": true,
+                "sku": "5020330000",
+                "legacyAccessoryIds": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "produto_compativel_com_versao_e_ano_especificos": {
+      "schema": "crm-thayna-reis-export",
+      "version": 1,
+      "exportedAt": "2026-06-18T00:00:00.000Z",
+      "source": "CRM Thayná Reis",
+      "sections": ["products"],
+      "data": {
+        "products": [
+          {
+            "id": "prod_carregador_inducao_tiggo_5_2027",
+            "name": "Carregador por Indução",
+            "description": "Carregador por indução compatível somente com versão e ano informados.",
+            "category": "Tecnologia",
+            "imageUrl": "",
+            "attributes": {
+              "codigo": "5050580000"
+            },
+            "compatibilities": [
+              {
+                "model": "Tiggo 5",
+                "version": "PRO",
+                "year": "2027"
+              }
+            ],
+            "universal": false,
+            "active": true,
+            "variations": [
+              {
+                "id": "prod_carregador_inducao_tiggo_5_2027_var_pro_2027",
+                "name": "PRO 2027",
+                "description": "Carregador por indução para Tiggo 5 PRO 2027.",
+                "imageUrl": "",
+                "attributes": {
+                  "codigo": "5050580000"
+                },
+                "price": 3200,
+                "commissionBonusAmount": 0,
+                "commissionBonusPercent": 0,
+                "timeEstimate": 60,
+                "compatibilities": [
+                  {
+                    "model": "Tiggo 5",
+                    "version": "PRO",
+                    "year": "2027"
+                  }
+                ],
+                "active": true,
+                "sku": "5050580000",
+                "legacyAccessoryIds": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "produto_com_variacoes_de_compatibilidade_diferente": {
+      "schema": "crm-thayna-reis-export",
+      "version": 1,
+      "exportedAt": "2026-06-18T00:00:00.000Z",
+      "source": "CRM Thayná Reis",
+      "sections": ["products"],
+      "data": {
+        "products": [
+          {
+            "id": "prod_friso_personalizado",
+            "name": "Friso Personalizado",
+            "description": "Friso lateral personalizado com variações por veículo.",
+            "category": "Estética",
+            "imageUrl": "",
+            "attributes": {},
+            "compatibilities": [
+              {
+                "model": "Tiggo 5"
+              },
+              {
+                "model": "Tiggo 7",
+                "version": "SPORT"
+              },
+              {
+                "model": "Tiggo 8",
+                "year": "2025"
+              }
+            ],
+            "universal": false,
+            "active": true,
+            "variations": [
+              {
+                "id": "prod_friso_personalizado_var_tiggo_5",
+                "name": "Tiggo 5",
+                "description": "Friso para Tiggo 5, todas as versões e anos.",
+                "imageUrl": "",
+                "attributes": {
+                  "codigo": "5044260000"
+                },
+                "price": 1750,
+                "commissionBonusAmount": 0,
+                "commissionBonusPercent": 0,
+                "timeEstimate": 60,
+                "compatibilities": [
+                  {
+                    "model": "Tiggo 5"
+                  }
+                ],
+                "active": true,
+                "sku": "5044260000",
+                "legacyAccessoryIds": []
+              },
+              {
+                "id": "prod_friso_personalizado_var_tiggo_7_sport",
+                "name": "Tiggo 7 SPORT",
+                "description": "Friso para Tiggo 7 SPORT, todos os anos.",
+                "imageUrl": "",
+                "attributes": {
+                  "codigo": "5044250000"
+                },
+                "price": 1750,
+                "commissionBonusAmount": 0,
+                "commissionBonusPercent": 0,
+                "timeEstimate": 60,
+                "compatibilities": [
+                  {
+                    "model": "Tiggo 7",
+                    "version": "SPORT"
+                  }
+                ],
+                "active": true,
+                "sku": "5044250000",
+                "legacyAccessoryIds": []
+              },
+              {
+                "id": "prod_friso_personalizado_var_tiggo_8_2025",
+                "name": "Tiggo 8 2025",
+                "description": "Friso para Tiggo 8, somente ano 2025.",
+                "imageUrl": "",
+                "attributes": {
+                  "codigo": "5044240000"
+                },
+                "price": 1750,
+                "commissionBonusAmount": 0,
+                "commissionBonusPercent": 0,
+                "timeEstimate": 60,
+                "compatibilities": [
+                  {
+                    "model": "Tiggo 8",
+                    "year": "2025"
+                  }
+                ],
+                "active": true,
+                "sku": "5044240000",
+                "legacyAccessoryIds": []
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "prompt_recomendado_para_treinar_ia": "Gere somente JSON valido no schema crm-thayna-reis-export. Use data.products com produtos no formato Product. Para compatibilidade universal use universal true e compatibilities vazia no produto e nas variacoes. Para compatibilidade parcial use universal false e preencha compatibilities com objetos contendo model, e opcionalmente version e year. Omitir version significa todas as versoes. Omitir year significa todos os anos. Nunca use texto TODOS nas compatibilidades."
+}

@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2022"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "rootDir": ".",
+    "outDir": "server-dist",
+    "noEmit": false,
+    "declaration": false,
+    "sourceMap": false
+  },
+  "include": [
+    "server/**/*.ts",
+    "src/data/**/*.ts",
+    "src/types.ts",
+    "src/utils/commissions.ts",
+    "src/utils/saleStatus.ts"
+  ]
+}
