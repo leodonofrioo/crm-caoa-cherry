@@ -6,10 +6,12 @@ RUN apt-get update -y \
 FROM base AS deps
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --audit=false
+ENV NODE_ENV=development
+RUN npm ci --include=dev --audit=false
 
 FROM base AS build
 WORKDIR /app
+ENV NODE_ENV=development
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV DATABASE_URL=postgresql://user:pass@localhost:5432/build
