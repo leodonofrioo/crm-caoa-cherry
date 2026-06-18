@@ -1,6 +1,6 @@
-# CRM CAOA Chery
+# CRM Thayná Reis
 
-CRM interno para propostas de acessórios CAOA Chery, com catálogo por produto/variação, compatibilidade por modelo/versão/ano, slots comerciais na proposta e persistência server-side.
+CRM interno para propostas de acessórios, com catálogo por produto/variação, compatibilidade por modelo/versão/ano, slots comerciais na proposta e persistência server-side.
 
 ## Stack
 

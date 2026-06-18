@@ -134,7 +134,7 @@ export default function Dashboard({ onNavigateToTab, onSelectSale }: DashboardPr
       case 'Pós-venda':
         return `Oi, ${firstName}, tudo bem? Passando só para saber se ficou tudo certo com os acessórios instalados no seu ${carModel}. Espero que tenha adorado!`;
       default:
-        return `Oi, ${firstName}, tudo bem? Sou a Thayná da CAOA Chery. Gostaria de conversar sobre as opções de acessórios personalizados para o seu novo ${carModel}.`;
+        return `Oi, ${firstName}, tudo bem? Sou a Thayná. Gostaria de conversar sobre as opções de acessórios personalizados para o seu novo ${carModel}.`;
     }
   };
 
@@ -258,7 +258,7 @@ export default function Dashboard({ onNavigateToTab, onSelectSale }: DashboardPr
               <span className="text-xs text-slate-400 font-medium">negócios</span>
             </div>
           </div>
-          <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block mt-2">CAOA Chery · Catálogo Russi</span>
+          <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block mt-2">Catálogo próprio · Russi</span>
         </div>
 
         {/* KPI 2 */}

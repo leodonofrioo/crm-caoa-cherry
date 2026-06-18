@@ -74,13 +74,11 @@ export default function ProposalPrint({ sale, items, accessories, onClose }: Pro
           {/* Print Letter Head */}
           <div className="flex items-start justify-between border-b-2 border-blue-900 pb-6 mb-8">
             <div className="space-y-1.5">
-              <img
-                src="/brands/caoa-chery-logo.png"
-                alt="CAOA CHERY"
-                className="h-14 w-40 object-contain object-left"
-              />
+              <div className="text-lg font-black uppercase tracking-tight text-blue-900">
+                CRM Thayná Reis
+              </div>
               <div className="text-slate-500 text-xs font-semibold uppercase tracking-wide">
-                Concessionária Autorizada • Acessórios Genuínos
+                Proposta de acessórios • Atendimento interno
               </div>
               <div className="text-[11px] text-slate-400">
                 Avenida Santos Dumont, São Paulo SP
@@ -111,10 +109,10 @@ export default function ProposalPrint({ sale, items, accessories, onClose }: Pro
 
             <div className="space-y-1.5">
               <span className="font-bold text-[10px] text-slate-400 uppercase tracking-widest block mb-1">
-                Veículo CAOA Chery Escolhido
+                Veículo Escolhido
               </span>
               <div className="text-blue-900 font-bold text-sm">
-                CAOA CHERY {sale.carModel?.toUpperCase()}
+                {sale.carModel?.toUpperCase()}
               </div>
               <div className="text-slate-700">Versão: {sale.carVersion}</div>
               <div className="text-slate-600">Ano Modelo: {sale.carYear}</div>
@@ -262,11 +260,11 @@ export default function ProposalPrint({ sale, items, accessories, onClose }: Pro
             <h5 className="font-bold text-slate-600 uppercase tracking-wide">Observações Importantes:</h5>
             <ol className="list-decimal pl-4 space-y-1">
               <li>Validade da proposta: 5 dias a partir da data de emissão.</li>
-              <li>Acessórios genuínos preservam o padrão de instalação da concessionária.</li>
+              <li>Acessórios preservam o padrão de instalação combinado com a oficina.</li>
               <li>Prazo de instalação agendado de acordo com a disponibilidade da oficina técnica e faturamento do carro.</li>
             </ol>
             <div className="pt-8 text-center text-slate-350 italic font-medium">
-              Obrigado pela preferência! CAOA Chery.
+              Obrigado pela preferência! CRM Thayná Reis.
             </div>
           </div>
         </div>

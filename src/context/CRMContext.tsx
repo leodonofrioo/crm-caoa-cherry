@@ -32,6 +32,7 @@ import {
   INITIAL_SALE_ITEMS,
   INITIAL_FOLLOWUPS,
   INITIAL_EVENTS,
+  sanitizeSettings,
 } from '../data/seeds';
 import { calculateSaleCommission, getMonthlyOpportunityCount, getMonthlyVolumeBeforeSale, getSaleMonthKey } from '../utils/commissions';
 import { coerceSalesStatus } from '../utils/saleStatus';
@@ -319,7 +320,7 @@ export function CRMProvider({ children }: { children: React.ReactNode }) {
     setSaleItems(Array.isArray(data.saleItems) ? data.saleItems : INITIAL_SALE_ITEMS);
     setFollowups(Array.isArray(data.followups) ? data.followups : INITIAL_FOLLOWUPS);
     setEvents(Array.isArray(data.events) ? data.events : INITIAL_EVENTS);
-    setSettings({ ...DEFAULT_SETTINGS, ...(data.settings || {}) });
+    setSettings(sanitizeSettings(data.settings));
     setCarModels(Array.isArray(data.carModels) ? data.carModels : INITIAL_CAR_MODELS);
     setSales(Array.isArray(data.sales) ? data.sales.map(normalizeSaleRecord) : INITIAL_SALES);
   };
@@ -357,7 +358,7 @@ export function CRMProvider({ children }: { children: React.ReactNode }) {
     let loadedSales: Sale[] = storedSales ? JSON.parse(storedSales) : INITIAL_SALES;
     let loadedFollowups: Followup[] = storedFollowups ? JSON.parse(storedFollowups) : INITIAL_FOLLOWUPS;
     let loadedEvents: SaleEvent[] = storedEvents ? JSON.parse(storedEvents) : INITIAL_EVENTS;
-    let activeSettings: Settings = { ...DEFAULT_SETTINGS };
+    let activeSettings: Settings = sanitizeSettings(DEFAULT_SETTINGS);
 
     const normalizedLoadedSales = loadedSales.map(normalizeSaleRecord);
     if (JSON.stringify(normalizedLoadedSales) !== JSON.stringify(loadedSales)) {
@@ -387,7 +388,8 @@ export function CRMProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('crm_events', JSON.stringify(loadedEvents));
 
     if (storedSettings) {
-      const parsed = { ...DEFAULT_SETTINGS, ...JSON.parse(storedSettings) };
+      const storedSettingsSnapshot = JSON.parse(storedSettings);
+      const parsed = sanitizeSettings(storedSettingsSnapshot);
       let shouldPersistSettings = false;
       if (parsed.commissionPlanVersion !== 2) {
         parsed.commissionPercent = 1.7;
@@ -404,14 +406,15 @@ export function CRMProvider({ children }: { children: React.ReactNode }) {
         parsed.targetPerClient === undefined ||
         parsed.goalBonusAmount === undefined ||
         parsed.goalExtraCommissionPercent === undefined ||
-        parsed.commissionPlanVersion === undefined
+        parsed.commissionPlanVersion === undefined ||
+        JSON.stringify(parsed) !== JSON.stringify({ ...DEFAULT_SETTINGS, ...storedSettingsSnapshot })
       ) {
         localStorage.setItem('crm_settings', JSON.stringify(parsed));
       }
       activeSettings = parsed;
       setSettings(parsed);
     } else {
-      const initialSettings = { ...DEFAULT_SETTINGS };
+      const initialSettings = sanitizeSettings(DEFAULT_SETTINGS);
       activeSettings = initialSettings;
       setSettings(initialSettings);
       localStorage.setItem('crm_settings', JSON.stringify(initialSettings));
@@ -543,7 +546,7 @@ export function CRMProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateSettings = (newSettings: Partial<Settings>) => {
-    const updated = { ...settings, ...newSettings };
+    const updated = sanitizeSettings({ ...settings, ...newSettings });
     setSettings(updated);
     syncToLocalStorage('crm_settings', updated);
   };
@@ -574,7 +577,7 @@ export function CRMProvider({ children }: { children: React.ReactNode }) {
     setSaleItems(INITIAL_SALE_ITEMS);
     setFollowups(INITIAL_FOLLOWUPS);
     setEvents(INITIAL_EVENTS);
-    const initialSettings = { ...DEFAULT_SETTINGS };
+    const initialSettings = sanitizeSettings(DEFAULT_SETTINGS);
     setSettings(initialSettings);
     setCarModels(INITIAL_CAR_MODELS);
 
@@ -1300,7 +1303,7 @@ export function CRMProvider({ children }: { children: React.ReactNode }) {
           skippedSections.push(section);
           return;
         }
-        const nextSettings = { ...DEFAULT_SETTINGS, ...data.settings };
+        const nextSettings = sanitizeSettings(data.settings);
         setSettings(nextSettings);
         syncToLocalStorage('crm_settings', nextSettings);
         importedSections.push(section);

@@ -4,7 +4,7 @@ import { Accessory, Sale, Settings } from '../../src/types.js';
 
 const settings: Settings = {
   commissionPercent: 1.7,
-  dealerName: 'CAOA Chery',
+  dealerName: 'CRM Thayná Reis',
   targetPerClient: 2000,
   goalBonusAmount: 0,
   goalExtraCommissionPercent: 0.5,

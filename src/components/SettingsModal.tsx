@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useCRM } from '../context/CRMContext';
+import { sanitizeSettings } from '../data/seeds';
 import { CRMExportPayload, CRMExportSection, Product } from '../types';
 import { getMonthlyOpportunityCount, getSaleMonthKey } from '../utils/commissions';
 import {
@@ -130,7 +131,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     {
       key: 'settings',
       label: 'Metas e parâmetros',
-      description: 'Comissão, metas e nome da concessionária',
+      description: 'Comissão, metas e identificação do CRM',
     },
     {
       key: 'vehicles',
@@ -301,10 +302,11 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const syncLocalSettingsAfterImport = (payload: CRMExportPayload) => {
     if (!selectedImportSections.includes('settings') || !payload.data.settings) return;
     const importedSettings = payload.data.settings;
-    setTargetPerClient(importedSettings.targetPerClient ?? 2000);
-    setCommissionPercent(importedSettings.commissionPercent);
-    setGoalExtraCommissionPercent(importedSettings.goalExtraCommissionPercent ?? 0.5);
-    setDealerName(importedSettings.dealerName);
+    const cleanSettings = sanitizeSettings(importedSettings);
+    setTargetPerClient(cleanSettings.targetPerClient ?? 2000);
+    setCommissionPercent(cleanSettings.commissionPercent);
+    setGoalExtraCommissionPercent(cleanSettings.goalExtraCommissionPercent ?? 0.5);
+    setDealerName(cleanSettings.dealerName);
   };
 
   const handleImportPayload = (payload: CRMExportPayload) => {
@@ -379,7 +381,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         setTargetPerClient(2000);
         setCommissionPercent(1.7);
         setGoalExtraCommissionPercent(0.5);
-        setDealerName('CAOA Chery');
+        setDealerName('CRM Thayná Reis');
         setSelectedModelId('');
         setSelectedVersionName('');
         showAlert('Sistema resetado', 'O CRM foi limpo. Produtos, acessórios, propostas, follow-ups e histórico foram removidos.');
@@ -745,7 +747,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </div>
 
               <div className="space-y-1">
-                <label className="font-bold text-slate-700">Nome da Concessionária</label>
+                <label className="font-bold text-slate-700">Identificação do CRM</label>
                 <input
                   type="text"
                   value={dealerName}

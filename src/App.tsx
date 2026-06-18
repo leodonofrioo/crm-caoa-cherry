@@ -78,17 +78,16 @@ function LoginScreen({ onAuthenticated }: { onAuthenticated: (user: AuthUser) =>
       <section className="relative grid w-full max-w-5xl overflow-hidden rounded-[28px] border border-white/10 bg-white shadow-2xl lg:grid-cols-[1.05fr_0.95fr]">
         <div className="hidden min-h-[560px] flex-col justify-between bg-[#07111f] p-10 text-white lg:flex">
           <div>
-            <img
-              src="/brands/caoa-chery-logo.png"
-              alt="CAOA CHERY"
-              className="h-28 w-72 object-contain object-left"
-            />
+            <div className="inline-flex h-24 w-72 flex-col justify-center border-l-4 border-[#D71920] pl-5">
+              <span className="text-xs font-black uppercase tracking-[0.35em] text-[#D71920]">CRM</span>
+              <span className="text-3xl font-black uppercase tracking-tight text-white">Thayná Reis</span>
+            </div>
             <div className="mt-10 max-w-md">
               <h1 className="text-4xl font-black uppercase leading-tight tracking-tight">
                 Accessories CRM
               </h1>
               <p className="mt-4 text-sm font-semibold leading-6 text-slate-300">
-                Gestão de propostas, acessórios, instalação e comissões com padrão CAOA Chery.
+                Gestão de propostas, acessórios, instalação e comissões com padrão próprio.
               </p>
             </div>
           </div>
@@ -196,11 +195,9 @@ function AuthGate({ children }: { children: (user: AuthUser, onLogout: () => voi
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#05070B] text-white">
         <div className="flex flex-col items-center gap-4">
-          <img
-            src="/brands/caoa-chery-logo.png"
-            alt="CAOA CHERY"
-            className="h-20 w-56 object-contain"
-          />
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-lg font-black text-[#002C5F]">
+            TR
+          </div>
           <div className="text-xs font-black uppercase tracking-widest text-slate-300">Validando sessão</div>
         </div>
       </main>
@@ -250,14 +247,12 @@ function NavigationLayout({ user, onLogout }: { user: AuthUser; onLogout: () => 
       <header className="no-print bg-white border-b border-slate-200 shadow-xs shrink-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3 min-w-0">
-            <img
-              src="/brands/caoa-chery-logo.png"
-              alt="CAOA CHERY"
-              className="h-12 w-32 shrink-0 object-contain"
-            />
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#002C5F] text-xs font-black text-white">
+              TR
+            </div>
             <div className="min-w-0 border-l border-slate-200 pl-3">
               <h1 className="text-sm sm:text-base font-bold leading-none tracking-tight text-[#002C5F] truncate">Accessories CRM</h1>
-              <span className="text-[10px] text-slate-500 uppercase tracking-widest block font-medium truncate">Thayná Reis · {settings.dealerName}</span>
+              <span className="text-[10px] text-slate-500 uppercase tracking-widest block font-medium truncate">Catálogo próprio · {settings.dealerName}</span>
             </div>
           </div>
 
@@ -363,7 +358,7 @@ function NavigationLayout({ user, onLogout }: { user: AuthUser; onLogout: () => 
 
       {/* Footer bar */}
       <footer className="no-print mt-auto py-6 border-t border-slate-100 text-slate-400 text-[11px] font-sans text-center">
-        <span>CRM Thayná Reis · Catálogo CAOA Chery · Uso Interno · 2026</span>
+        <span>CRM Thayná Reis · Catálogo de Acessórios · Uso Interno · 2026</span>
       </footer>
     </div>
   );

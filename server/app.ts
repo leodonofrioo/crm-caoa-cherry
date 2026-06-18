@@ -15,6 +15,7 @@ import {
   replaceSnapshot,
 } from './persistence.js';
 import { flattenProductsToAccessories } from '../src/data/accessories.js';
+import { sanitizeSettings } from '../src/data/seeds.js';
 
 const projectRoot = process.cwd();
 const distDir = path.join(projectRoot, 'dist');
@@ -352,7 +353,7 @@ export const createApp = () => {
   app.patch('/api/settings', async (req, res, next) => {
     try {
       const snapshot = await loadSnapshot();
-      const settings = { ...snapshot.settings, ...req.body };
+      const settings = sanitizeSettings({ ...snapshot.settings, ...req.body });
       await replaceSnapshot({ ...snapshot, settings });
       res.json({ ok: true, settings });
     } catch (error) {

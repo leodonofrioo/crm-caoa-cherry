@@ -17,6 +17,7 @@ import {
   INITIAL_FOLLOWUPS,
   INITIAL_SALE_ITEMS,
   INITIAL_SALES,
+  sanitizeSettings,
 } from '../src/data/seeds.js';
 
 const adapter = new PrismaPg({
@@ -80,7 +81,7 @@ const initialSnapshot = (): CrmSnapshot => ({
   saleItems: INITIAL_SALE_ITEMS,
   followups: INITIAL_FOLLOWUPS,
   events: INITIAL_EVENTS,
-  settings: { ...DEFAULT_SETTINGS },
+  settings: sanitizeSettings(DEFAULT_SETTINGS),
   carModels: INITIAL_CAR_MODELS,
 });
 
@@ -238,7 +239,7 @@ export const loadSnapshot = async (): Promise<CrmSnapshot> => {
       nextValue: event.nextValue || undefined,
       changedBy: event.changedBy || undefined,
     })),
-    settings: { ...DEFAULT_SETTINGS, ...readJson<Settings>(settingRow?.data, DEFAULT_SETTINGS) },
+    settings: sanitizeSettings(readJson<Settings>(settingRow?.data, DEFAULT_SETTINGS)),
     carModels: carRows.map((model) => ({
       id: model.id,
       name: model.name,
@@ -265,8 +266,8 @@ export const replaceSnapshot = async (snapshot: CrmSnapshot) => {
 
     await tx.setting.upsert({
       where: { id: 'singleton' },
-      update: { data: jsonValue({ ...DEFAULT_SETTINGS, ...snapshot.settings }) },
-      create: { id: 'singleton', data: jsonValue({ ...DEFAULT_SETTINGS, ...snapshot.settings }) },
+      update: { data: jsonValue(sanitizeSettings(snapshot.settings)) },
+      create: { id: 'singleton', data: jsonValue(sanitizeSettings(snapshot.settings)) },
     });
 
     for (const model of snapshot.carModels) {
@@ -429,7 +430,7 @@ export const mergeAndReplaceSnapshot = async (
     saleItems: sections.includes('sales') && Array.isArray(data.saleItems) ? data.saleItems : current.saleItems,
     followups: sections.includes('followups') && Array.isArray(data.followups) ? data.followups : current.followups,
     events: sections.includes('events') && Array.isArray(data.events) ? data.events : current.events,
-    settings: sections.includes('settings') && data.settings ? { ...DEFAULT_SETTINGS, ...data.settings } : current.settings,
+    settings: sections.includes('settings') && data.settings ? sanitizeSettings(data.settings) : current.settings,
     carModels: sections.includes('vehicles') && Array.isArray(data.carModels) ? data.carModels : current.carModels,
   };
   await replaceSnapshot(next);
