@@ -68,7 +68,7 @@ export default function FilmSimulatorModal({ films, initialFilm, initialSecondFi
 
   return (
     <div
-      className="fixed inset-0 bg-slate-950/85 flex items-center justify-center p-4 z-[70] animate-fade-in no-print"
+      className="fixed inset-0 bg-slate-950/85 flex items-center justify-center p-4 z-[110] animate-fade-in no-print"
       onClick={onClose}
     >
       <div

@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useCRM } from '../context/CRMContext';
 import { ALLOWED_CAR_MODELS, isVehicleCompatible } from '../data/accessories';
 import { getCategoryConfig } from '../data/categoryConfig';
-import { AccessoryCategory, Product, ProductVariation, VehicleCompatibility } from '../types';
+import { AccessoryCategory, CarModel, Product, ProductVariation, VehicleCompatibility } from '../types';
 import type { CategoryFieldConfig } from '../data/categoryConfig';
 import { Check, ChevronDown, ChevronUp, Edit, Filter, Plus, Printer, Search, Tag, Trash, XCircle } from 'lucide-react';
 import { MobileFilterSheet, MobilePageHeader } from './mobile';
@@ -91,12 +91,41 @@ const unionCompatibilities = (variations: ProductVariation[]): VehicleCompatibil
 };
 
 const formatCompatibility = (compatibility: VehicleCompatibility) =>
-  [compatibility.model, compatibility.version, compatibility.year].filter(Boolean).join(' - ');
+  [
+    compatibility.model,
+    compatibility.version || 'todas as versões',
+    compatibility.year || 'todos os anos',
+  ].join(' - ');
 
 const optionalPositiveNumber = (value: unknown) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
 };
+
+const getYearSortValue = (year: string) => {
+  const parsed = Number(year);
+  return Number.isInteger(parsed) ? parsed : Number.POSITIVE_INFINITY;
+};
+
+const getCompatibilityYearOptions = (years: string[]) => {
+  const maxYear = new Date().getFullYear() + 1;
+  const numericYears = years.map(Number).filter(Number.isInteger);
+  const minYear = numericYears.length > 0
+    ? Math.min(...numericYears.filter((year) => year <= maxYear), maxYear)
+    : maxYear;
+  const rangeYears = Array.from({ length: maxYear - minYear + 1 }, (_, index) => String(minYear + index));
+  return Array.from(new Set([...years.filter((year) => getYearSortValue(year) <= maxYear), ...rangeYears]))
+    .sort((a, b) => getYearSortValue(a) - getYearSortValue(b) || a.localeCompare(b, 'pt-BR'));
+};
+
+const withCompatibilityYearOptions = (models: CarModel[]): CarModel[] =>
+  models.map((model) => ({
+    ...model,
+    versions: model.versions.map((version) => ({
+      ...version,
+      years: getCompatibilityYearOptions(version.years),
+    })),
+  }));
 
 export default function AccessoriesList() {
   const { products, carModels, settings, updateSettings, addProduct, updateProduct, deleteProduct, showAlert, showConfirm } = useCRM();
@@ -120,7 +149,7 @@ export default function AccessoriesList() {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [isChecklistPrintOpen, setIsChecklistPrintOpen] = useState(false);
   const catalogCarModels = useMemo(
-    () => carModels.filter((model) => ALLOWED_CAR_MODELS.includes(model.name)),
+    () => withCompatibilityYearOptions(carModels.filter((model) => ALLOWED_CAR_MODELS.includes(model.name))),
     [carModels]
   );
   const selectedCatalogModel = catalogCarModels.find((model) => model.name === selectedModel);
@@ -395,6 +424,20 @@ export default function AccessoriesList() {
     );
   };
 
+  const isAllModelsChecked = (variation: ProductVariation) =>
+    catalogCarModels.length > 0 && catalogCarModels.every((model) => isModelChecked(variation, model.name));
+
+  const isAllModelsIndeterminate = (variation: ProductVariation) =>
+    !isAllModelsChecked(variation) &&
+    catalogCarModels.some((model) => isModelChecked(variation, model.name) || isModelIndeterminate(variation, model));
+
+  const toggleAllModelsCompatibility = (variation: ProductVariation) => {
+    setVariationCompatibilities(
+      variation,
+      isAllModelsChecked(variation) ? [] : catalogCarModels.map((model) => ({ model: model.name }))
+    );
+  };
+
   const saveForm = (event: React.FormEvent) => {
     event.preventDefault();
     const name = formName.trim();
@@ -510,7 +553,7 @@ export default function AccessoriesList() {
           className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-blue-100 bg-blue-50 text-xs font-black uppercase tracking-wide text-[#002C5F]"
         >
           <Filter className="h-4 w-4" />
-          {activeSelectedCategory === 'Todos' ? 'Todas categorias' : activeSelectedCategory} · {selectedModel === 'Todos' ? 'Todos carros' : selectedModel}
+          {activeSelectedCategory === 'Todos' ? 'Todas categorias' : activeSelectedCategory} · {selectedModel === 'Todos' ? 'Todos modelos' : selectedModel}
           {selectedVersion !== 'Todos' ? ` · ${selectedVersion}` : ''}
           {selectedYear !== 'Todos' ? ` · ${selectedYear}` : ''}
         </button>
@@ -546,7 +589,7 @@ export default function AccessoriesList() {
               onChange={(event) => handleCatalogModelChange(event.target.value)}
               className="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm font-bold normal-case tracking-normal text-slate-700"
             >
-              <option value="Todos">Todos os Carros</option>
+              <option value="Todos">Todos os modelos</option>
               {ALLOWED_CAR_MODELS.map((model) => <option key={model} value={model}>{model}</option>)}
             </select>
           </label>
@@ -601,7 +644,7 @@ export default function AccessoriesList() {
           onChange={(event) => handleCatalogModelChange(event.target.value)}
           className="text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none text-slate-700 font-bold"
         >
-          <option value="Todos">Todos os Carros</option>
+          <option value="Todos">Todos os modelos</option>
           {ALLOWED_CAR_MODELS.map((model) => <option key={model} value={model}>{model}</option>)}
         </select>
         <select
@@ -896,6 +939,30 @@ export default function AccessoriesList() {
                         </span>
                       </div>
 
+                      <button
+                        type="button"
+                        onClick={() => toggleAllModelsCompatibility(variation)}
+                        className="flex w-full items-center justify-between gap-3 rounded-xl border border-blue-100 bg-white px-3 py-2 text-left hover:bg-blue-50/50"
+                      >
+                        <span className="flex min-w-0 items-center gap-2">
+                          <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
+                            isAllModelsChecked(variation)
+                              ? 'border-[#002C5F] bg-[#002C5F] text-white'
+                              : isAllModelsIndeterminate(variation)
+                                ? 'border-[#002C5F] bg-blue-50 text-[#002C5F]'
+                                : 'border-slate-300 bg-white'
+                          }`}>
+                            {isAllModelsChecked(variation) ? <Check className="h-3 w-3 stroke-[3.5]" /> : isAllModelsIndeterminate(variation) ? <span className="h-0.5 w-2 rounded bg-[#002C5F]" /> : null}
+                          </span>
+                          <span className="truncate text-xs font-black uppercase tracking-tight text-[#002C5F]">
+                            Todos os modelos
+                          </span>
+                        </span>
+                        <span className="shrink-0 text-[10px] font-bold text-slate-400">
+                          todas versões e anos
+                        </span>
+                      </button>
+
                       <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
                         {catalogCarModels.map((model) => {
                           const modelChecked = isModelChecked(variation, model.name);
@@ -921,7 +988,10 @@ export default function AccessoriesList() {
                                     {modelChecked ? <Check className="h-3 w-3 stroke-[3.5]" /> : modelIndeterminate ? <span className="h-0.5 w-2 rounded bg-[#002C5F]" /> : null}
                                   </span>
                                   <span className="truncate text-xs font-black uppercase tracking-tight text-slate-800">
-                                    Toda linha {model.name}
+                                    {model.name}
+                                  </span>
+                                  <span className="shrink-0 text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                                    Todas as versões
                                   </span>
                                 </button>
                                 <button
@@ -955,7 +1025,12 @@ export default function AccessoriesList() {
                                           }`}>
                                             {versionChecked ? <Check className="h-3 w-3 stroke-[3.5]" /> : versionIndeterminate ? <span className="h-0.5 w-2 rounded bg-[#002C5F]" /> : null}
                                           </span>
-                                          <span className="text-xs font-bold text-slate-700">Versão: {version.name}</span>
+                                          <span className="text-xs font-bold text-slate-700">
+                                            {version.name}
+                                            <span className="ml-1 text-[10px] font-black uppercase tracking-wide text-slate-400">
+                                              Todos os anos
+                                            </span>
+                                          </span>
                                         </button>
 
                                         <div className="mt-2 flex flex-wrap gap-1.5 pl-6">
