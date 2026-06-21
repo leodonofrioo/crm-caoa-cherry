@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useCRM, isAccessoryCompatible, getSimulatedToday } from '../context/CRMContext';
 import {
   Sale,
@@ -46,6 +46,7 @@ import {
   Wrench,
 } from 'lucide-react';
 import ProposalPrint from './ProposalPrint';
+import AccessoryChecklistPrint, { buildAccessoryChecklistPages } from './AccessoryChecklistPrint';
 import FilmSimulatorModal from './FilmSimulatorModal';
 import { MobileActionBar, MobileEntityCard, MobileFilterSheet, MobilePageHeader } from './mobile';
 import { getAccessoryAttributeBadges } from '../data/categoryConfig';
@@ -389,6 +390,7 @@ export default function VendaForm({ selectedSaleId, onClearSelectedSale, createR
 
   // Proposal print view overlay
   const [printingSale, setPrintingSale] = useState<Sale | null>(null);
+  const [isVehicleChecklistPrintOpen, setIsVehicleChecklistPrintOpen] = useState(false);
 
   // Load selected sale if passed from parent (Dashboard click or Kanban click)
   useEffect(() => {
@@ -1092,6 +1094,20 @@ export default function VendaForm({ selectedSaleId, onClearSelectedSale, createR
   const activeVersionsList = currentModelObj?.versions || [];
   const currentVersionObj = activeVersionsList.find((v) => v.name === carVersion);
   const activeYearsList = currentVersionObj?.years || [];
+  const vehicleChecklistPages = useMemo(
+    () =>
+      carModel && carVersion && carYear
+        ? buildAccessoryChecklistPages(products, [{ model: carModel, version: carVersion, year: carYear }])
+        : [],
+    [carModel, carVersion, carYear, products]
+  );
+  const openVehicleChecklistPrint = () => {
+    if (!carModel || !carVersion || !carYear) {
+      showAlert('Veículo incompleto', 'Selecione modelo, versão e ano para imprimir só o checklist do carro do cliente.');
+      return;
+    }
+    setIsVehicleChecklistPrintOpen(true);
+  };
 
   return (
     <div className="space-y-4 md:space-y-6 animate-fade-in relative text-slate-800">
@@ -1629,6 +1645,15 @@ export default function VendaForm({ selectedSaleId, onClearSelectedSale, createR
                       </select>
                     </div>
                   </div>
+
+                  <button
+                    type="button"
+                    onClick={openVehicleChecklistPrint}
+                    className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-4 py-2.5 text-xs font-black uppercase tracking-wide text-[#002C5F] hover:bg-blue-100"
+                  >
+                    <Printer className="h-4 w-4" />
+                    Imprimir checklist deste carro
+                  </button>
 
                   <div className="rounded-xl border border-blue-100 bg-blue-50/30 p-3 space-y-3">
                     <div className="flex items-center justify-between gap-2">
@@ -2319,7 +2344,7 @@ export default function VendaForm({ selectedSaleId, onClearSelectedSale, createR
 
       {isPackageSlotModalOpen && selectedPackageSlot && (
         <div
-          className="fixed inset-0 z-[60] flex items-start sm:items-center justify-center bg-slate-900/55 p-2 sm:p-4 animate-fade-in overflow-y-auto"
+          className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center bg-slate-900/55 p-2 sm:p-4 animate-fade-in overflow-y-auto"
           onClick={() => setIsPackageSlotModalOpen(false)}
         >
           <div
@@ -2490,7 +2515,7 @@ export default function VendaForm({ selectedSaleId, onClearSelectedSale, createR
 
       {isFilmConfigModalOpen && (
         <div
-          className="fixed inset-0 z-[60] flex items-start sm:items-center justify-center bg-slate-900/55 p-3 sm:p-4 animate-fade-in overflow-y-auto"
+          className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center bg-slate-900/55 p-3 sm:p-4 animate-fade-in overflow-y-auto"
           onClick={() => setIsFilmConfigModalOpen(false)}
         >
           <div
@@ -2539,6 +2564,16 @@ export default function VendaForm({ selectedSaleId, onClearSelectedSale, createR
           items={getSaleFilteredItems(printingSale.id)}
           accessories={accessories}
           onClose={() => setPrintingSale(null)}
+        />
+      )}
+
+      {isVehicleChecklistPrintOpen && (
+        <AccessoryChecklistPrint
+          pages={vehicleChecklistPages}
+          dealerName={settings.dealerName}
+          clientName={clientName}
+          clientWhatsapp={clientPhone}
+          onClose={() => setIsVehicleChecklistPrintOpen(false)}
         />
       )}
 

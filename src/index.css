@@ -15,8 +15,28 @@
   }
 }
 
+.checklist-a4-page {
+  width: min(100%, 210mm);
+  min-height: 297mm;
+  padding: 10mm;
+}
+
+.checklist-print-root {
+  max-width: 210mm;
+}
+
+/* Product proposal sub-modals must sit above the proposal editor overlay. */
+.fixed.inset-0.z-\[60\] {
+  z-index: 100;
+}
+
 /* Custom print style for proposals */
 @media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm;
+  }
+
   .no-print {
     display: none !important;
   }
@@ -26,5 +46,60 @@
   body {
     background: white !important;
     color: black !important;
+  }
+
+  body:has(.checklist-print-root) #root > * {
+    visibility: hidden !important;
+  }
+
+  body:has(.checklist-print-root) .checklist-print-root,
+  body:has(.checklist-print-root) .checklist-print-root * {
+    visibility: visible !important;
+  }
+
+  body:has(.checklist-print-root) .checklist-preview-shell,
+  body:has(.checklist-print-root) .checklist-preview-scroll {
+    display: block !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    background: white !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+
+  body:has(.checklist-print-root) .checklist-print-toolbar {
+    display: none !important;
+  }
+
+  body:has(.checklist-print-root) .checklist-print-root {
+    position: absolute !important;
+    inset: 0 auto auto 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body:has(.checklist-print-root) .checklist-a4-page {
+    width: auto !important;
+    min-height: auto !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    break-after: page;
+    page-break-after: always;
+  }
+
+  body:has(.checklist-print-root) .checklist-a4-page:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  body:has(.checklist-print-root) .checklist-page-header,
+  body:has(.checklist-print-root) .checklist-page-footer,
+  body:has(.checklist-print-root) tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 }

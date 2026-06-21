@@ -1,11 +1,12 @@
 import React, { useMemo, useState } from 'react';
 import { useCRM } from '../context/CRMContext';
-import { ALLOWED_CAR_MODELS } from '../data/accessories';
+import { ALLOWED_CAR_MODELS, isVehicleCompatible } from '../data/accessories';
 import { getCategoryConfig } from '../data/categoryConfig';
 import { AccessoryCategory, Product, ProductVariation, VehicleCompatibility } from '../types';
 import type { CategoryFieldConfig } from '../data/categoryConfig';
-import { Check, ChevronDown, ChevronUp, Edit, Filter, Plus, Search, Tag, Trash, XCircle } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, Edit, Filter, Plus, Printer, Search, Tag, Trash, XCircle } from 'lucide-react';
 import { MobileFilterSheet, MobilePageHeader } from './mobile';
+import AccessoryChecklistPrint, { buildAccessoryChecklistPages } from './AccessoryChecklistPrint';
 
 const SOLAR_FILM_CATEGORY = 'Película Solar';
 
@@ -103,6 +104,8 @@ export default function AccessoriesList() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
   const [selectedModel, setSelectedModel] = useState('Todos');
+  const [selectedVersion, setSelectedVersion] = useState('Todos');
+  const [selectedYear, setSelectedYear] = useState('Todos');
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -115,7 +118,23 @@ export default function AccessoriesList() {
   const [expandedCompatibilityModels, setExpandedCompatibilityModels] = useState<Record<string, boolean>>({});
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
-  const catalogCarModels = carModels.filter((model) => ALLOWED_CAR_MODELS.includes(model.name));
+  const [isChecklistPrintOpen, setIsChecklistPrintOpen] = useState(false);
+  const catalogCarModels = useMemo(
+    () => carModels.filter((model) => ALLOWED_CAR_MODELS.includes(model.name)),
+    [carModels]
+  );
+  const selectedCatalogModel = catalogCarModels.find((model) => model.name === selectedModel);
+  const catalogVersionOptions = selectedCatalogModel?.versions || [];
+  const selectedCatalogVersion = catalogVersionOptions.find((version) => version.name === selectedVersion);
+  const catalogYearOptions = selectedCatalogVersion?.years || [];
+  const canPrintCatalogChecklist = selectedModel !== 'Todos' && selectedVersion !== 'Todos' && selectedYear !== 'Todos';
+  const checklistPages = useMemo(
+    () =>
+      canPrintCatalogChecklist
+        ? buildAccessoryChecklistPages(products, [{ model: selectedModel, version: selectedVersion, year: selectedYear }])
+        : [],
+    [canPrintCatalogChecklist, products, selectedModel, selectedVersion, selectedYear]
+  );
   const registeredProductCategories = useMemo(
     () => getUniqueCategories(products.map((product) => product.category)),
     [products]
@@ -137,16 +156,44 @@ export default function AccessoriesList() {
   const showSolarFilmFields = isSolarFilmCategory(formCategory);
   const activeSelectedCategory =
     selectedCategory === 'Todos' || categoryFilterOptions.includes(selectedCategory) ? selectedCategory : 'Todos';
+  const activeVersion = selectedVersion === 'Todos' ? undefined : selectedVersion;
+  const activeYear = selectedYear === 'Todos' ? undefined : selectedYear;
 
-  const filteredProducts = products.filter((product) => {
+  const filteredProducts = products
+    .map((product) => {
+      const visibleVariations =
+        selectedModel === 'Todos'
+          ? product.variations
+          : product.variations.filter((variation) =>
+              isVehicleCompatible(variation.compatibilities, selectedModel, activeVersion, activeYear)
+            );
+      return { ...product, variations: visibleVariations };
+    })
+    .filter((product) => {
     const text = `${product.name} ${product.description} ${product.variations.map((variation) => variation.name).join(' ')}`.toLowerCase();
     const matchesSearch = text.includes(searchTerm.toLowerCase());
     const matchesCategory = activeSelectedCategory === 'Todos' || product.category === activeSelectedCategory;
-    const matchesModel =
-      selectedModel === 'Todos' ||
-      product.variations.some((variation) => variation.compatibilities.some((compatibility) => compatibility.model === selectedModel));
-    return matchesSearch && matchesCategory && matchesModel;
+    return matchesSearch && matchesCategory && product.variations.length > 0;
   });
+
+  const handleCatalogModelChange = (model: string) => {
+    setSelectedModel(model);
+    setSelectedVersion('Todos');
+    setSelectedYear('Todos');
+  };
+
+  const handleCatalogVersionChange = (version: string) => {
+    setSelectedVersion(version);
+    setSelectedYear('Todos');
+  };
+
+  const openCatalogChecklistPrint = () => {
+    if (!canPrintCatalogChecklist) {
+      showAlert('Escolha o veículo', 'Selecione modelo, versão e ano para imprimir só o checklist do carro do cliente.');
+      return;
+    }
+    setIsChecklistPrintOpen(true);
+  };
 
   const openCreateForm = () => {
     setEditingId(null);
@@ -426,12 +473,24 @@ export default function AccessoriesList() {
             Produto principal, variações e compatibilidade restrita a Tiggo 5, Tiggo 7 e Tiggo 8.
           </p>
         </div>
-        <button
-          onClick={openCreateForm}
-          className="bg-[#002C5F] hover:bg-slate-800 text-white font-bold text-xs px-4 py-2.5 rounded-xl flex items-center justify-center gap-1.5 shadow-md uppercase tracking-wide"
-        >
-          <Plus className="w-4 h-4" /> Cadastrar Produto
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={openCatalogChecklistPrint}
+            className={`flex items-center justify-center gap-1.5 rounded-xl border px-4 py-2.5 text-xs font-bold uppercase tracking-wide ${
+              canPrintCatalogChecklist
+                ? 'border-blue-100 bg-blue-50 text-[#002C5F] hover:bg-blue-100'
+                : 'border-slate-200 bg-slate-50 text-slate-400'
+            }`}
+          >
+            <Printer className="w-4 h-4" /> Imprimir checklist do carro
+          </button>
+          <button
+            onClick={openCreateForm}
+            className="bg-[#002C5F] hover:bg-slate-800 text-white font-bold text-xs px-4 py-2.5 rounded-xl flex items-center justify-center gap-1.5 shadow-md uppercase tracking-wide"
+          >
+            <Plus className="w-4 h-4" /> Cadastrar Produto
+          </button>
+        </div>
       </div>
 
       <div className="md:hidden space-y-2 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
@@ -452,6 +511,18 @@ export default function AccessoriesList() {
         >
           <Filter className="h-4 w-4" />
           {activeSelectedCategory === 'Todos' ? 'Todas categorias' : activeSelectedCategory} · {selectedModel === 'Todos' ? 'Todos carros' : selectedModel}
+          {selectedVersion !== 'Todos' ? ` · ${selectedVersion}` : ''}
+          {selectedYear !== 'Todos' ? ` · ${selectedYear}` : ''}
+        </button>
+        <button
+          type="button"
+          onClick={openCatalogChecklistPrint}
+          className={`flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border text-xs font-black uppercase tracking-wide ${
+            canPrintCatalogChecklist ? 'border-slate-200 bg-white text-slate-700' : 'border-slate-200 bg-slate-50 text-slate-400'
+          }`}
+        >
+          <Printer className="h-4 w-4" />
+          Imprimir checklist do carro
         </button>
       </div>
 
@@ -472,17 +543,41 @@ export default function AccessoriesList() {
             <span>Carro</span>
             <select
               value={selectedModel}
-              onChange={(event) => setSelectedModel(event.target.value)}
+              onChange={(event) => handleCatalogModelChange(event.target.value)}
               className="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm font-bold normal-case tracking-normal text-slate-700"
             >
               <option value="Todos">Todos os Carros</option>
               {ALLOWED_CAR_MODELS.map((model) => <option key={model} value={model}>{model}</option>)}
             </select>
           </label>
+          <label className="space-y-2 text-xs font-black uppercase tracking-wide text-slate-500">
+            <span>Versão</span>
+            <select
+              value={selectedVersion}
+              onChange={(event) => handleCatalogVersionChange(event.target.value)}
+              disabled={selectedModel === 'Todos'}
+              className="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm font-bold normal-case tracking-normal text-slate-700 disabled:bg-slate-100 disabled:text-slate-400"
+            >
+              <option value="Todos">Todas as versões</option>
+              {catalogVersionOptions.map((version) => <option key={version.name} value={version.name}>{version.name}</option>)}
+            </select>
+          </label>
+          <label className="space-y-2 text-xs font-black uppercase tracking-wide text-slate-500">
+            <span>Ano</span>
+            <select
+              value={selectedYear}
+              onChange={(event) => setSelectedYear(event.target.value)}
+              disabled={selectedVersion === 'Todos'}
+              className="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm font-bold normal-case tracking-normal text-slate-700 disabled:bg-slate-100 disabled:text-slate-400"
+            >
+              <option value="Todos">Todos os anos</option>
+              {catalogYearOptions.map((year) => <option key={year} value={year}>{year}</option>)}
+            </select>
+          </label>
         </div>
       </MobileFilterSheet>
 
-      <div className="hidden md:grid bg-white p-4 rounded-xl border border-slate-200 shadow-xs grid-cols-1 md:grid-cols-[1fr_180px_160px] gap-4 items-center">
+      <div className="hidden md:grid bg-white p-4 rounded-xl border border-slate-200 shadow-xs grid-cols-1 xl:grid-cols-[1fr_160px_130px_220px_110px] gap-4 items-center">
         <div className="relative">
           <Search className="w-4.5 h-4.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
@@ -503,11 +598,29 @@ export default function AccessoriesList() {
         </select>
         <select
           value={selectedModel}
-          onChange={(event) => setSelectedModel(event.target.value)}
+          onChange={(event) => handleCatalogModelChange(event.target.value)}
           className="text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none text-slate-700 font-bold"
         >
           <option value="Todos">Todos os Carros</option>
           {ALLOWED_CAR_MODELS.map((model) => <option key={model} value={model}>{model}</option>)}
+        </select>
+        <select
+          value={selectedVersion}
+          onChange={(event) => handleCatalogVersionChange(event.target.value)}
+          disabled={selectedModel === 'Todos'}
+          className="text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none text-slate-700 font-bold disabled:text-slate-400"
+        >
+          <option value="Todos">Todas as Versões</option>
+          {catalogVersionOptions.map((version) => <option key={version.name} value={version.name}>{version.name}</option>)}
+        </select>
+        <select
+          value={selectedYear}
+          onChange={(event) => setSelectedYear(event.target.value)}
+          disabled={selectedVersion === 'Todos'}
+          className="text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none text-slate-700 font-bold disabled:text-slate-400"
+        >
+          <option value="Todos">Todos os Anos</option>
+          {catalogYearOptions.map((year) => <option key={year} value={year}>{year}</option>)}
         </select>
       </div>
 
@@ -535,7 +648,11 @@ export default function AccessoriesList() {
                     </div>
                   </div>
                   <div className="flex shrink-0 gap-2">
-                    <button onClick={() => openEditForm(product)} className="rounded-xl border border-slate-200 bg-white p-2 text-slate-600 hover:bg-slate-100" title="Editar">
+                    <button
+                      onClick={() => openEditForm(products.find((candidate) => candidate.id === product.id) || product)}
+                      className="rounded-xl border border-slate-200 bg-white p-2 text-slate-600 hover:bg-slate-100"
+                      title="Editar"
+                    >
                       <Edit className="h-4 w-4" />
                     </button>
                     <button
@@ -908,6 +1025,14 @@ export default function AccessoriesList() {
             </form>
           </div>
         </div>
+      )}
+
+      {isChecklistPrintOpen && (
+        <AccessoryChecklistPrint
+          pages={checklistPages}
+          dealerName={settings.dealerName}
+          onClose={() => setIsChecklistPrintOpen(false)}
+        />
       )}
     </div>
   );
